@@ -2,14 +2,14 @@ local applied_lang = (locale == "en" or locale == "zhr") and "en" or "zh"
 
 
 local mname = {
-    ["zh"] = "种子备注显示",
-    ["en"] = "seed names fix"
+	zh = "种子备注显示",
+	en = "seed names fix"
 }
 name = mname[applied_lang]
 
 local mdescription = {
-	["zh"] = "帮你猜测种子叫啥。",
-	["en"] = "help you understand what the unknown seed is."
+	zh = "帮你猜测种子叫啥。",
+	en = "help you understand what the unknown seed is."
 }
 description = mdescription[applied_lang]
 
