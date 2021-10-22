@@ -25,15 +25,6 @@ dst_compatible = true
 all_clients_require_mod = true
 
 
-myesStr = {
-	en = 
-	zh = "启用 √"
-}
-
-mnoStr = {
-	en = "Disable √",
-	zh = "禁用 √"
-}
 yesStr="Enable √"
 noStr="Disable ×"
 
