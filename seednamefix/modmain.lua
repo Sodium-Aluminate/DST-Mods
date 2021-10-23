@@ -39,7 +39,7 @@ local function patch()
 	GLOBAL.STRINGS.NAMES.WATERMELON_SEEDS = GLOBAL.STRINGS.NAMES.WATERMELON_SEEDS .. "(" .. GLOBAL.STRINGS.NAMES.WATERMELON .. ")"
 	GLOBAL.STRINGS.NAMES.KNOWN_WATERMELON_SEEDS = GLOBAL.STRINGS.NAMES.WATERMELON_SEEDS
 	i = i+1
-	print(modname.." patched " .. i.. " times.")
+	-- print(modname.." patched " .. i.. " times.")
 end
 
 
