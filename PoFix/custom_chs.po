@@ -1,0 +1,188 @@
+msgid ""
+msgstr ""
+"Language: zh\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT Version: 2.0"
+
+
+#. STRINGS.UI.MODSSCREEN.LOADING
+msgctxt "STRINGS.UI.MODSSCREEN.LOADING"
+msgid "Loading"
+msgstr "少女祈祷中"
+
+#. STRINGS.NAMES.WAGSTAFF_TOOL_1_LAYMAN	
+msgctxt "STRINGS.NAMES.WAGSTAFF_TOOL_1_LAYMAN"	
+msgid "怪异工具"	
+msgstr "怪异工具(网状缓冲器)"	
+
+#. STRINGS.NAMES.WAGSTAFF_TOOL_2_LAYMAN	
+msgctxt "STRINGS.NAMES.WAGSTAFF_TOOL_2_LAYMAN"	
+msgid "古怪工具"	
+msgstr "古怪工具(装置除垢器)"	
+
+#. STRINGS.NAMES.WAGSTAFF_TOOL_3_LAYMAN	
+msgctxt "STRINGS.NAMES.WAGSTAFF_TOOL_3_LAYMAN"	
+msgid "奇异工具"	
+msgstr "奇异工具(垫圈开槽器)"	
+
+#. STRINGS.NAMES.WAGSTAFF_TOOL_4_LAYMAN	
+msgctxt "STRINGS.NAMES.WAGSTAFF_TOOL_4_LAYMAN"	
+msgid "离奇工具"	
+msgstr "离奇工具(概念刷洗器)"	
+
+#. STRINGS.NAMES.WAGSTAFF_TOOL_5_LAYMAN	
+msgctxt "STRINGS.NAMES.WAGSTAFF_TOOL_5_LAYMAN"	
+msgid "诡异工具"	
+msgstr "诡异工具(校准观察机)"	
+
+#. STRINGS.NAMES.ASPARAGUS_SEEDS
+msgctxt "STRINGS.NAMES.ASPARAGUS_SEEDS"
+msgid "筒状种子"
+msgstr "筒状种子(芦笋)"
+
+#. STRINGS.NAMES.KNOWN_ASPARAGUS_SEEDS
+msgctxt "STRINGS.NAMES.KNOWN_ASPARAGUS_SEEDS"
+msgid "芦笋种子"
+msgstr "筒状种子(芦笋)"
+
+#. STRINGS.NAMES.CARROT_SEEDS
+msgctxt "STRINGS.NAMES.CARROT_SEEDS"
+msgid "椭圆形种子"
+msgstr "椭圆形种子(胡萝卜)"
+
+#. STRINGS.NAMES.KNOWN_CARROT_SEEDS
+msgctxt "STRINGS.NAMES.KNOWN_CARROT_SEEDS"
+msgid "胡萝卜种子"
+msgstr "椭圆形种子(胡萝卜)"
+
+#. STRINGS.NAMES.CORN_SEEDS
+msgctxt "STRINGS.NAMES.CORN_SEEDS"
+msgid "簇状种子"
+msgstr "簇状种子(玉米)"
+
+#. STRINGS.NAMES.KNOWN_CORN_SEEDS
+msgctxt "STRINGS.NAMES.KNOWN_CORN_SEEDS"
+msgid "玉米种子"
+msgstr "簇状种子(玉米)"
+
+#. STRINGS.NAMES.DRAGONFRUIT_SEEDS
+msgctxt "STRINGS.NAMES.DRAGONFRUIT_SEEDS"
+msgid "球茎状种子"
+msgstr "球茎状种子(火龙果)"
+
+#. STRINGS.NAMES.KNOWN_DRAGONFRUIT_SEEDS
+msgctxt "STRINGS.NAMES.KNOWN_DRAGONFRUIT_SEEDS"
+msgid "火龙果种子"
+msgstr "球茎状种子(火龙果)"
+
+#. STRINGS.NAMES.DURIAN_SEEDS
+msgctxt "STRINGS.NAMES.DURIAN_SEEDS"
+msgid "脆籽荚"
+msgstr "脆籽荚(榴莲)"
+
+#. STRINGS.NAMES.KNOWN_DURIAN_SEEDS
+msgctxt "STRINGS.NAMES.KNOWN_DURIAN_SEEDS"
+msgid "榴莲种子"
+msgstr "脆籽荚(榴莲)"
+
+#. STRINGS.NAMES.EGGPLANT_SEEDS
+msgctxt "STRINGS.NAMES.EGGPLANT_SEEDS"
+msgid "漩涡种子"
+msgstr "漩涡种子(茄子)"
+
+#. STRINGS.NAMES.KNOWN_EGGPLANT_SEEDS
+msgctxt "STRINGS.NAMES.KNOWN_EGGPLANT_SEEDS"
+msgid "茄子种子"
+msgstr "漩涡种子(茄子)"
+
+#. STRINGS.NAMES.GARLIC_SEEDS
+msgctxt "STRINGS.NAMES.GARLIC_SEEDS"
+msgid "种子荚"
+msgstr "种子荚(大蒜)"
+
+#. STRINGS.NAMES.KNOWN_GARLIC_SEEDS
+msgctxt "STRINGS.NAMES.KNOWN_GARLIC_SEEDS"
+msgid "蒜种子"
+msgstr "种子荚(大蒜)"
+
+#. STRINGS.NAMES.ONION_SEEDS
+msgctxt "STRINGS.NAMES.ONION_SEEDS"
+msgid "尖形种子"
+msgstr "尖形种子(洋葱)"
+
+#. STRINGS.NAMES.KNOWN_ONION_SEEDS
+msgctxt "STRINGS.NAMES.KNOWN_ONION_SEEDS"
+msgid "洋葱种子"
+msgstr "尖形种子(洋葱)"
+
+#. STRINGS.NAMES.PEPPER_SEEDS
+msgctxt "STRINGS.NAMES.PEPPER_SEEDS"
+msgid "块状种子"
+msgstr "块状种子(辣椒)"
+
+#. STRINGS.NAMES.KNOWN_PEPPER_SEEDS
+msgctxt "STRINGS.NAMES.KNOWN_PEPPER_SEEDS"
+msgid "辣椒种子"
+msgstr "块状种子(辣椒)"
+
+#. STRINGS.NAMES.POMEGRANATE_SEEDS
+msgctxt "STRINGS.NAMES.POMEGRANATE_SEEDS"
+msgid "风刮来的种子"
+msgstr "风刮来的种子(石榴)"
+
+#. STRINGS.NAMES.KNOWN_POMEGRANATE_SEEDS
+msgctxt "STRINGS.NAMES.KNOWN_POMEGRANATE_SEEDS"
+msgid "石榴种子"
+msgstr "风刮来的种子(石榴)"
+
+#. STRINGS.NAMES.POTATO_SEEDS
+msgctxt "STRINGS.NAMES.POTATO_SEEDS"
+msgid "毛茸茸的种子"
+msgstr "毛茸茸的种子(土豆)"
+
+#. STRINGS.NAMES.KNOWN_POTATO_SEEDS
+msgctxt "STRINGS.NAMES.KNOWN_POTATO_SEEDS"
+msgid "土豆种子"
+msgstr "毛茸茸的种子(土豆)"
+
+#. STRINGS.NAMES.PUMPKIN_SEEDS
+msgctxt "STRINGS.NAMES.PUMPKIN_SEEDS"
+msgid "尖种子"
+msgstr "尖种子(南瓜)"
+
+#. STRINGS.NAMES.KNOWN_PUMPKIN_SEEDS
+msgctxt "STRINGS.NAMES.KNOWN_PUMPKIN_SEEDS"
+msgid "南瓜种子"
+msgstr "尖种子(南瓜)"
+
+#. STRINGS.NAMES.TOMATO_SEEDS
+msgctxt "STRINGS.NAMES.TOMATO_SEEDS"
+msgid "带刺的种子"
+msgstr "带刺的种子(番茄)"
+
+#. STRINGS.NAMES.KNOWN_TOMATO_SEEDS
+msgctxt "STRINGS.NAMES.KNOWN_TOMATO_SEEDS"
+msgid "番茄种子"
+msgstr "带刺的种子(番茄)"
+
+#. STRINGS.NAMES.TURNIP_SEEDS
+msgctxt "STRINGS.NAMES.TURNIP_SEEDS"
+msgid "圆形种子"
+msgstr "圆形种子(大萝卜)"
+
+#. STRINGS.NAMES.KNOWN_TURNIP_SEEDS
+msgctxt "STRINGS.NAMES.KNOWN_TURNIP_SEEDS"
+msgid "萝卜种子"
+msgstr "圆形种子(大萝卜)"
+
+#. STRINGS.NAMES.WATERMELON_SEEDS
+msgctxt "STRINGS.NAMES.WATERMELON_SEEDS"
+msgid "方形种子"
+msgstr "方形种子(西瓜)"
+
+#. STRINGS.NAMES.KNOWN_WATERMELON_SEEDS
+msgctxt "STRINGS.NAMES.KNOWN_WATERMELON_SEEDS"
+msgid "西瓜种子"
+msgstr "方形种子(西瓜)"
+

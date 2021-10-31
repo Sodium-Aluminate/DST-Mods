@@ -18,7 +18,7 @@ author = "t.me/NaAlOH4"
 version = "1.0"
 
 api_version = 10
--- priority = -9000
+priority = 100
 dont_starve_compatible = false
 reign_of_giants_compatible = false
 shipwrecked_compatible = false
