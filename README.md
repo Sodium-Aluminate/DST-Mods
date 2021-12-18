@@ -28,3 +28,6 @@ changed name:
 * Calibrated Perceiver/Bizarre Tool
 
 to let you find the right tool quickly.
+
+# DST Bridge
+Chinese doc only yet ~~because I'm too lazy~~.
