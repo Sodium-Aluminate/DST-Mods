@@ -13,21 +13,18 @@ can set to "can't use hammer to remove"
 
 can set hammer count
 
-# Seed Name Fix
+# PoFix
 
-append the "true name" of the seed to the unknown name, so you can ensure which the seed is.
+replaced some text, including seed name and Wagstaff‘s tool.
 
-# Wagstaff Tool Name Fix
-
-changed name:
-
-* Reticulating Buffer/Odd Tool
-* Widget Deflubber/Weird Tool
-* Grommet Scriber/Strange Tool
-* Conceptual Scrubber/Funky Tool
-* Calibrated Perceiver/Bizarre Tool
-
-to let you find the right tool quickly.
+List of Wag's tool:
+```
+Reticulating Buffer/Odd Tool
+Widget Deflubber/Weird Tool
+Grommet Scriber/Strange Tool
+Conceptual Scrubber/Funky Tool
+Calibrated Perceiver/Bizarre Tool
+```
 
 # DST Bridge
 Chinese doc only yet ~~because I'm too lazy~~.
