@@ -2,6 +2,13 @@
 一些饥荒联机版的 mod
 [English version](README.md)
 
+## 安装说明
+放在游戏本体的 mod 文件夹即可。如：
+```
+.../Don't Starve Together/mods/PoFix
+```
+
+
 ## Droppable Houndius Shootius PLUS
 
 基于 [Droppable Houndius Shootius](https://steamcommunity.com/sharedfiles/filedetails/?id=2134460617)
