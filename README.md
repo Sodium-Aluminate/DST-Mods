@@ -2,6 +2,13 @@
 some mods of dst
 [中文版本](README_zh.md)
 
+## Installation guide
+
+Just copy mod dir into game mod dir. For example:
+```
+.../Don't Starve Together/mods/PoFox
+```
+
 ## Droppable Houndius Shootius PLUS
 based on [Droppable Houndius Shootius](https://steamcommunity.com/sharedfiles/filedetails/?id=2134460617)
 
