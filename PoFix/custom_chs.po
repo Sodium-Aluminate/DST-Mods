@@ -186,3 +186,8 @@ msgctxt "STRINGS.NAMES.KNOWN_WATERMELON_SEEDS"
 msgid "西瓜种子"
 msgstr "方形种子(西瓜)"
 
+#. STRINGS.NAMES.WORM_PLANT
+msgctxt "STRINGS.NAMES.WORM_PLANT"
+msgid "Mysterious Plant"
+msgstr "老麦杀手"
+
