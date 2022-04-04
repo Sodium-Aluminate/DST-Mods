@@ -9,8 +9,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +23,6 @@ public class Main {
     private static int offset = 0;
     public static void main(String[] arg) throws Exception {
 
-        String s = "{\"asStr\":\"balabala\"}";
         HttpServer server = HttpServer.create(new InetSocketAddress(5826), 0);
         server.createContext("/sendMessage", exchange -> {
             String requestMethod = exchange.getRequestMethod();

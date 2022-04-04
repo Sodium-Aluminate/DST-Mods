@@ -3,3 +3,6 @@ modsettings.lua
 MAKING_MODS.txt
 INSTALLING_MODS.txt
 dedicated_server_mods_setup.lua
+.idea
+out
+DST-Mods.iml
