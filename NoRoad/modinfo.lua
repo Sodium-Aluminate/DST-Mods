@@ -7,14 +7,17 @@ _name = {
 name = _name[l]
 
 _description = {
-	en= "hide rode for your OCD",
-	zh= "为了建家强迫症隐藏小路"
+	en= "hide rode for your OCD(it still exists but just hidden)",
+	zh= "为了建家强迫症隐藏小路(只是视觉上隐藏而已)"
 }
 description = _description[l]
 
 
 author = "NaAlOH4、Tony、秋一(<-还搞了 tex)"
 version = "1.0"
+
+icon_atlas = "modicon.xml"
+icon = "modicon.tex"
 
 dst_compatible = true
 client_only_mod = true

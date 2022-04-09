@@ -1,0 +1,11 @@
+msgid ""
+msgstr ""
+"Language: zh\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT Version: 2.0"
+
+msgctxt "STRINGS.ACTIONS.OPEN_CRAFTING.CARTOGRAPHY"
+msgid "make medal"
+msgstr "做勋章"
+
