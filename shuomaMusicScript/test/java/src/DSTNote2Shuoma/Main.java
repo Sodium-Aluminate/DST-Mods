@@ -4,6 +4,8 @@ package DSTNote2Shuoma;
 import IO.ReadFile;
 import IO.WriteFile;
 
+import java.util.HashMap;
+
 public class Main {
     static final String[] keyList = new String[]{"BC1",
             "C1", "CN1", "C2", "CN2", "C3", "C4", "CN4", "C7", "CN7", "C8", "CN8", "C9",
@@ -17,49 +19,75 @@ public class Main {
             "VN0"};
 
     public static void main(String[] args) {
-        String map = ReadFile.readFile("/home/sodiumaluminate/cache/妖怪少女.smkq.ori");
-        String bpm="200";
-        StringBuilder stringBuilder = new StringBuilder();
-        String[] strings = map.split("\n");
-        for (int j = 0; j < strings.length; j++) {
-            String s = strings[j];
+        // todo: vardef 嵌套，def 前置，def override 特性 def，override delta 特性
+        String map = ReadFile.readFile("/home/sodiumaluminate/DST-Mods/shuomaMusicScript/test/墨染樱花.smkq.ori");
+
+        HashMap<String, String> varMap = new HashMap<>();
+
+        StringBuilder mainStringBuilder = new StringBuilder();
+        String[] lines = map.split("\n");
+        for (int j = 0; j < lines.length; j++) {
+            String s = lines[j];
             if (s.startsWith("#")) continue;
             if (s.startsWith("!")) {
                 if (s.startsWith("!BPM=")) {
                     try {
                         String it = s.substring(5);
-                        if (Double.parseDouble(it) > 0) bpm = it;
+                        if (Double.parseDouble(it) > 0) mainStringBuilder.append("BPM=").append(it).append("\n");
                     } catch (NumberFormatException ignored) {
                     }
-                }
-                if (s.startsWith("!SKIP=")) {
+                } else if (s.startsWith("!SKIP=")) {
                     try {
                         int it = Integer.parseInt(s.substring(6));
-                        if (it > 0) j = it;
-                    }catch (NumberFormatException ignored){}
+                        if (it > 0 && it > j) j = it;
+                    } catch (NumberFormatException ignored) {
+                    }
+                } else if (s.startsWith("!VARDEF:")) {
+
+                    String key = s.substring(8);
+                    j++;
+                    StringBuilder value = new StringBuilder();
+                    for (; j < lines.length; j++) {
+                        if (lines[j].startsWith("#")) continue;
+                        if (lines[j].startsWith("!VARDEF")) {
+                            varMap.put(key, value.toString());
+                            break;
+                        }
+                        value.append(translate(lines[j]));
+                    }
+                } else if (s.startsWith("!VAR:")) {
+                    String key = s.substring(5);
+                    String value = varMap.get(key);
+                    if (value != null) mainStringBuilder.append(value);
                 }
                 continue;
             }
-            String[] split = s.split(" ");
-            for (int i = 0; i < split.length; i++) {
-                String s_ = split[i];
-                if (s_.equals("")) {
-                    stringBuilder.append("\n");
-                    continue;
-                }
-                if(s_.startsWith("_")){
-                    s_=s_.substring(1);
-                    stringBuilder.append(keyListAddtional[Integer.parseInt(s_)].toLowerCase());
-                }else {
-                    stringBuilder.append(keyList[Integer.parseInt(s_)].toLowerCase());
-                }
-                if (i != split.length - 1)
-                    stringBuilder.append(" ");
-                else
-                    stringBuilder.append("\n");
-            }
+            mainStringBuilder.append(translate(s));
         }
 
-        WriteFile.writeFile("/home/sodiumaluminate/cache/妖怪少女.smkq", "BPM="+bpm+"\n\n\n\n" + stringBuilder);
+        WriteFile.writeFile("/home/sodiumaluminate/DST-Mods/shuomaMusicScript/test/墨染樱花.smkq", mainStringBuilder.toString());
+    }
+
+    private static String translate(String raw){
+        StringBuilder stringBuilder = new StringBuilder();
+        String[] split = raw.split(" ");
+        for (int i = 0; i < split.length; i++) {
+            String s_ = split[i];
+            if (s_.equals("")) {
+                stringBuilder.append("\n");
+                continue;
+            }
+            if(s_.startsWith("_")){
+                s_=s_.substring(1);
+                stringBuilder.append(keyListAddtional[Integer.parseInt(s_)].toLowerCase());
+            }else {
+                stringBuilder.append(keyList[Integer.parseInt(s_)].toLowerCase());
+            }
+            if (i != split.length - 1)
+                stringBuilder.append(" ");
+            else
+                stringBuilder.append("\n");
+        }
+        return stringBuilder.toString();
     }
 }

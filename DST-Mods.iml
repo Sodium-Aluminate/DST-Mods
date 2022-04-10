@@ -6,6 +6,7 @@
       <sourceFolder url="file://$MODULE_DIR$/DST_Bridge/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Font2PNG" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Font2Png" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/shuomaMusicScript/test/java/src" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

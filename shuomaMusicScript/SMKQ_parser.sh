@@ -6,10 +6,11 @@ MINUTE=60000000000
 
 
 # current status
-c=0
-v=0
-b=0
-n=0
+# a: key is pressed; c: key released; b: we don't know the status.
+c=b
+v=b
+b=b
+n=b
 
 # readArg CN1 -> pressAsHotkey C N 1
 readArg(){
@@ -20,24 +21,24 @@ readArg(){
 
 # pressAsHotkey C N 1 -> press down C and N, press key 1, up C and N
 pressAsHotkey(){
-	ct=0
-	vt=0
-	bt=0
-	nt=0
+	ct=c
+	vt=c
+	bt=c
+	nt=c
 	for (( i=1; i<$#; i++ ))
 	do
 		key=$(eval echo \${$i})
-		eval ${key}t=1
+		eval ${key}t=a
 	done
 	for k_ in c v b n
 	do
 		curr=$(eval echo \$$k_)
 		target=$(eval echo \$${k_}t)
-		if [[ $curr > $target ]]
+		if [[ $curr < $target ]]
 		then
 			keyup $k_
 		fi
-		if [[ $curr < $target ]]
+		if [[ $curr > $target ]]
 		then
 			keydown $k_
 		fi
@@ -48,19 +49,19 @@ pressAsHotkey(){
 
 keydown(){
 	echo $(date +%H:%M:%S.%N)"	keydown: "$1
-	echo keydown $1 >> ${pipeName}_$1 &
-	eval $1=1
+	echo keydown $1 >> ${pipeName}
+	eval $1=a
 }
 
 keyup(){
 	echo $(date +%H:%M:%S.%N)"	keyup: "$1
-	echo keyup $1 >> ${pipeName}_$1 &
-	eval $1=0
+	echo keyup $1 >> ${pipeName}
+	eval $1=c
 }
 
 key(){
 	echo $(date +%H:%M:%S.%N)"	key: "$1
-	echo key $1 >> $pipeName &
+	echo key $1 >> $pipeName
 }
 
 
@@ -78,66 +79,53 @@ fi
 ## prepare pipe
 
 pipeName="/tmp/dstMusicPipe-"$(date +%s%N)
-mkfifo ${pipeName}_c
-mkfifo ${pipeName}_v
-mkfifo ${pipeName}_b
-mkfifo ${pipeName}_n
+
 mkfifo ${pipeName}
-tail -n +1 -f ${pipeName}_c|xte &
-tail -n +1 -f ${pipeName}_v|xte &
-tail -n +1 -f ${pipeName}_b|xte &
-tail -n +1 -f ${pipeName}_n|xte &
 tail -n +1 -f ${pipeName}|xte &
 
 
-## BPM 
+
 
 BPM=120
-BPMHeadlineTag=false
-headline=$(head -n1 $1)
-
-if [[ $headline == BPM=* ]]
-then 
-	BPM=$(echo $headline|sed 's/BPM=//')
-	BPMHeadlineTag=true
-fi
-
 
 numberRegex='^[0-9]+([.][0-9]+)?$'
-if ! [[ $BPM =~ $numberRegex ]]
-then
-	echo "BPM \""$BPM"\" is not a positive number."
-	exit 1
-	return
-fi
 
 startDate=$(date +%s%N)
 
 
 ## read file
-readFileCommand=cat
-if [[ $BPMHeadlineTag == true ]]
-then 
-	readFileCommand="sed 1d"
-fi
 
 lineNum=1
-$readFileCommand $1|while read l
+tickCount=0
+cat $1|while read l
 do
-	echo "readline :"$lineNum"("$l")"
-	# sync time
-	sleepTime=$(echo "scale=9;(($MINUTE/$BPM*$lineNum) - $(date +%s%N) + $startDate)/1000000000"|bc)
-	if [[ $sleepTime > 0 ]]
+	echo "read line "$lineNum": "$l
+	((lineNum++))
+
+	if [[ $l =~ BPM=* ]]
 	then
-		sleep $sleepTime
+	  tickCount=0
+	  startDate=$(date +%s%N)
+	  BPM=$(echo $l|sed 's/BPM=//')
+	  echo "settig BPM to "$BPM
+	  if ! [[ $BPM =~ $numberRegex ]]
+    then
+    	echo "BPM \""$BPM"\" is not a positive number."
+    	exit 1
+    	return
+    fi
+	else
+	  	sleepTime=$(echo "scale=9;(($MINUTE/$BPM*$tickCount) - $(date +%s%N) + $startDate)/1000000000"|bc)
+    	if (( $(echo "$sleepTime > 0"|bc -l) ))
+    	then
+    		sleep $sleepTime
+    	fi
+	  ((tickCount++))
+	  for j in $l
+    do
+    	readArg $j
+    done
 	fi
-	
-	
-	for j in $l
-	do
-		readArg $j
-	done
-	((lineNum++))																															
 done
 
 echo "">$pipeName
