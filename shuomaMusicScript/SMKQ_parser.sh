@@ -1,6 +1,6 @@
 #!/bin/bash
 
-KeyDelay=0.015
+KeyDelay=0.01
 
 MINUTE=60000000000
 

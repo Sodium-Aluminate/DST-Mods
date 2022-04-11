@@ -19,7 +19,11 @@ public class Main {
             "VN0"};
 
     public static void main(String[] args) {
-        // todo: vardef 嵌套，def 前置，def override 特性 def，override delta 特性
+        // todo:
+        //  vardef 嵌套
+        //  def 前置
+        //  def override 特性
+        //  def override delta 特性
         String map = ReadFile.readFile("/home/sodiumaluminate/DST-Mods/shuomaMusicScript/test/墨染樱花.smkq.ori");
 
         HashMap<String, String> varMap = new HashMap<>();
