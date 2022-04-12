@@ -43,7 +43,7 @@ public class Main {
                 } else if (s.startsWith("!SKIP=")) {
                     try {
                         int it = Integer.parseInt(s.substring(6));
-                        if (it > 0 && it > j) j = it;
+                        if (it > 0 && it > j) j = it - 1;
                     } catch (NumberFormatException ignored) {
                     }
                 } else if (s.startsWith("!VARDEF:")) {
