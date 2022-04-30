@@ -191,3 +191,14 @@ msgctxt "STRINGS.NAMES.WORM_PLANT"
 msgid "Mysterious Plant"
 msgstr "老麦杀手"
 
+# 能力勋章 Functional Medal https://steamcommunity.com/sharedfiles/filedetails/?id=1909182187
+#. STRINGS.NAMES.IMMORTAL_FRUIT_SEED
+msgctxt "STRINGS.NAMES.IMMORTAL_FRUIT_SEED"
+msgid "水滴形种子"
+msgstr "水滴形种子(不朽)"
+
+#. STRINGS.NAMES.KNOWN_IMMORTAL_FRUIT_SEED
+msgctxt "STRINGS.NAMES.KNOWN_IMMORTAL_FRUIT_SEED"
+msgid "不朽种子"
+msgstr "水滴形种子(不朽)"
+
