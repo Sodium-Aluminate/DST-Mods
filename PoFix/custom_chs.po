@@ -6,36 +6,65 @@ msgstr ""
 "POT Version: 2.0"
 
 
+# ================================ 这个因为加载顺序问题失败了，咕咕咕 ================================
 #. STRINGS.UI.MODSSCREEN.LOADING
 msgctxt "STRINGS.UI.MODSSCREEN.LOADING"
 msgid "Loading"
 msgstr "少女祈祷中"
 
-#. STRINGS.NAMES.WAGSTAFF_TOOL_1_LAYMAN	
-msgctxt "STRINGS.NAMES.WAGSTAFF_TOOL_1_LAYMAN"	
-msgid "怪异工具"	
-msgstr "怪异工具(网状缓冲器)"	
+# ================================ 显示工具名字 ================================
+#. STRINGS.NAMES.WAGSTAFF_TOOL_1_LAYMAN
+msgctxt "STRINGS.NAMES.WAGSTAFF_TOOL_1_LAYMAN"
+msgid "怪异工具"
+msgstr "怪异工具(网状缓冲器)"
 
-#. STRINGS.NAMES.WAGSTAFF_TOOL_2_LAYMAN	
-msgctxt "STRINGS.NAMES.WAGSTAFF_TOOL_2_LAYMAN"	
-msgid "古怪工具"	
-msgstr "古怪工具(装置除垢器)"	
+#. STRINGS.NAMES.WAGSTAFF_TOOL_2_LAYMAN
+msgctxt "STRINGS.NAMES.WAGSTAFF_TOOL_2_LAYMAN"
+msgid "古怪工具"
+msgstr "古怪工具(装置除垢器)"
 
-#. STRINGS.NAMES.WAGSTAFF_TOOL_3_LAYMAN	
-msgctxt "STRINGS.NAMES.WAGSTAFF_TOOL_3_LAYMAN"	
-msgid "奇异工具"	
-msgstr "奇异工具(垫圈开槽器)"	
+#. STRINGS.NAMES.WAGSTAFF_TOOL_3_LAYMAN
+msgctxt "STRINGS.NAMES.WAGSTAFF_TOOL_3_LAYMAN"
+msgid "奇异工具"
+msgstr "奇异工具(垫圈开槽器)"
 
-#. STRINGS.NAMES.WAGSTAFF_TOOL_4_LAYMAN	
-msgctxt "STRINGS.NAMES.WAGSTAFF_TOOL_4_LAYMAN"	
-msgid "离奇工具"	
-msgstr "离奇工具(概念刷洗器)"	
+#. STRINGS.NAMES.WAGSTAFF_TOOL_4_LAYMAN
+msgctxt "STRINGS.NAMES.WAGSTAFF_TOOL_4_LAYMAN"
+msgid "离奇工具"
+msgstr "离奇工具(概念刷洗器)"
 
-#. STRINGS.NAMES.WAGSTAFF_TOOL_5_LAYMAN	
-msgctxt "STRINGS.NAMES.WAGSTAFF_TOOL_5_LAYMAN"	
-msgid "诡异工具"	
-msgstr "诡异工具(校准观察机)"	
+#. STRINGS.NAMES.WAGSTAFF_TOOL_5_LAYMAN
+msgctxt "STRINGS.NAMES.WAGSTAFF_TOOL_5_LAYMAN"
+msgid "诡异工具"
+msgstr "诡异工具(校准观察机)"
 
+# ================================ 女工也不放过 ================================
+#. STRINGS.NAMES.WAGSTAFF_TOOL_1
+msgctxt "STRINGS.NAMES.WAGSTAFF_TOOL_1"
+msgid "怪异工具"
+msgstr "怪异工具(网状缓冲器)"
+
+#. STRINGS.NAMES.WAGSTAFF_TOOL_2
+msgctxt "STRINGS.NAMES.WAGSTAFF_TOOL_2"
+msgid "古怪工具"
+msgstr "古怪工具(装置除垢器)"
+
+#. STRINGS.NAMES.WAGSTAFF_TOOL_3
+msgctxt "STRINGS.NAMES.WAGSTAFF_TOOL_3"
+msgid "奇异工具"
+msgstr "奇异工具(垫圈开槽器)"
+
+#. STRINGS.NAMES.WAGSTAFF_TOOL_4
+msgctxt "STRINGS.NAMES.WAGSTAFF_TOOL_4"
+msgid "离奇工具"
+msgstr "离奇工具(概念刷洗器)"
+
+#. STRINGS.NAMES.WAGSTAFF_TOOL_5
+msgctxt "STRINGS.NAMES.WAGSTAFF_TOOL_5"
+msgid "诡异工具"
+msgstr "诡异工具(校准观察机)"
+
+# ================================ 种子名字全糊掉 ================================
 #. STRINGS.NAMES.ASPARAGUS_SEEDS
 msgctxt "STRINGS.NAMES.ASPARAGUS_SEEDS"
 msgid "筒状种子"
@@ -192,6 +221,7 @@ msgid "Mysterious Plant"
 msgstr "老麦杀手"
 
 # 能力勋章 Functional Medal https://steamcommunity.com/sharedfiles/filedetails/?id=1909182187
+# ================================ 因为最近在玩勋章所以加上了 ================================
 #. STRINGS.NAMES.IMMORTAL_FRUIT_SEED
 msgctxt "STRINGS.NAMES.IMMORTAL_FRUIT_SEED"
 msgid "水滴形种子"
@@ -202,7 +232,7 @@ msgctxt "STRINGS.NAMES.KNOWN_IMMORTAL_FRUIT_SEED"
 msgid "不朽种子"
 msgstr "水滴形种子(不朽)"
 
-
+# ================================ 贝壳钟显示音调 ================================
 #. STRINGS.CHARACTERS.GENERIC.DESCRIBE.SINGINGSHELL_OCTAVE3.GENERIC
 msgctxt "STRINGS.CHARACTERS.GENERIC.DESCRIBE.SINGINGSHELL_OCTAVE3.GENERIC"
 msgid "It's a bit more toned down."
@@ -443,4 +473,359 @@ msgctxt "STRINGS.CHARACTERS.WX78.DESCRIBE.SINGINGSHELL_OCTAVE5.GENERIC"
 msgid "GO BACK TO THE HORRIBLE WATER WHERE YOU BELONG"
 msgstr "回去你可怕的海里吧\n（{note}）"
 
+# ================================ 寄居蟹好感度显示 ================================
+#. STRINGS.HERMITCRAB_GREETING.0.1
+msgctxt "STRINGS.HERMITCRAB_GREETING.0.1"
+msgid "Go away!"
+msgstr "走开！\n（你还没有帮过孤寡老太婆）"
 
+#. STRINGS.HERMITCRAB_GREETING.0.2
+msgctxt "STRINGS.HERMITCRAB_GREETING.0.2"
+msgid "Shoo!"
+msgstr "去去去！\n（你还没有帮过孤寡老太婆）"
+
+#. STRINGS.HERMITCRAB_GREETING.0.3
+msgctxt "STRINGS.HERMITCRAB_GREETING.0.3"
+msgid "Leave me alone!"
+msgstr "别烦我了。\n（你还没有帮过孤寡老太婆）"
+
+#. STRINGS.HERMITCRAB_GREETING.0.4
+msgctxt "STRINGS.HERMITCRAB_GREETING.0.4"
+msgid "No trespassing!"
+msgstr "别过来！\n（你还没有帮过孤寡老太婆）"
+
+#. STRINGS.HERMITCRAB_GREETING.0.5
+msgctxt "STRINGS.HERMITCRAB_GREETING.0.5"
+msgid "Get off my beach!"
+msgstr "离开我的海滩！\n（你还没有帮过孤寡老太婆）"
+
+#. STRINGS.HERMITCRAB_GREETING.1.1
+msgctxt "STRINGS.HERMITCRAB_GREETING.1.1"
+msgid "Hmph."
+msgstr "哼。\n（好感度为 1）"
+
+#. STRINGS.HERMITCRAB_GREETING.1.2
+msgctxt "STRINGS.HERMITCRAB_GREETING.1.2"
+msgid "Go find someone else to bother!"
+msgstr "去烦别人吧！\n（好感度为 1）"
+
+#. STRINGS.HERMITCRAB_GREETING.2.1
+msgctxt "STRINGS.HERMITCRAB_GREETING.2.1"
+msgid "What are you doing here?"
+msgstr "什么风把你吹来了？\n（好感度为 2）"
+
+#. STRINGS.HERMITCRAB_GREETING.2.2
+msgctxt "STRINGS.HERMITCRAB_GREETING.2.2"
+msgid "What do you want?"
+msgstr "你想要什么？\n（好感度为 2）"
+
+#. STRINGS.HERMITCRAB_GREETING.3.1
+msgctxt "STRINGS.HERMITCRAB_GREETING.3.1"
+msgid "You're back?"
+msgstr "回来了？\n（好感度为 3）"
+
+#. STRINGS.HERMITCRAB_GREETING.3.2
+msgctxt "STRINGS.HERMITCRAB_GREETING.3.2"
+msgid "Don't you have anything better to do?"
+msgstr "你就没点正经事做吗？\n（好感度为 3）"
+
+#. STRINGS.HERMITCRAB_GREETING.3.3
+msgctxt "STRINGS.HERMITCRAB_GREETING.3.3"
+msgid "Troublesome whipper-snapper..."
+msgstr "讨厌的家伙……\n（好感度为 3）"
+
+#. STRINGS.HERMITCRAB_GREETING.4.1.1
+msgctxt "STRINGS.HERMITCRAB_GREETING.4.1.1"
+msgid "You're persistent"
+msgstr "你还真是坚持不懈\n（好感度为 4）"
+
+#. STRINGS.HERMITCRAB_GREETING.4.1.2
+msgctxt "STRINGS.HERMITCRAB_GREETING.4.1.2"
+msgid "I'll give you that."
+msgstr "这点倒是真的。\n（好感度为 4）"
+
+#. STRINGS.HERMITCRAB_GREETING.4.2
+msgctxt "STRINGS.HERMITCRAB_GREETING.4.2"
+msgid "Hmph. Just don't make a nuisance of yourself."
+msgstr "哼。别太惹人烦就行。\n（好感度为 4）"
+
+#. STRINGS.HERMITCRAB_GREETING.5.1
+msgctxt "STRINGS.HERMITCRAB_GREETING.5.1"
+msgid "Just can't get enough of my sparkling personality, hmm?"
+msgstr "越来越喜欢我迷人的性格了吗？\n（好感度为 5）"
+
+#. STRINGS.HERMITCRAB_GREETING.5.2.1
+msgctxt "STRINGS.HERMITCRAB_GREETING.5.2.1"
+msgid "Well, if it isn't... hm..."
+msgstr "好吧，那就……\n（好感度为 5）"
+
+#. STRINGS.HERMITCRAB_GREETING.5.2.2
+msgctxt "STRINGS.HERMITCRAB_GREETING.5.2.2"
+msgid "What was your name?"
+msgstr "你尊姓大名？\n（好感度为 5）"
+
+#. STRINGS.HERMITCRAB_GREETING.6.1
+msgctxt "STRINGS.HERMITCRAB_GREETING.6.1"
+msgid "Why are you helping me?"
+msgstr "你为什么帮我？\n（好感度为 6）"
+
+#. STRINGS.HERMITCRAB_GREETING.7.1
+msgctxt "STRINGS.HERMITCRAB_GREETING.7.1"
+msgid "It's been hard taking care of this old place by myself."
+msgstr "我一个人照顾这个房子真的好难啊。\n（好感度为 7）"
+
+#. STRINGS.HERMITCRAB_GREETING.7.2
+msgctxt "STRINGS.HERMITCRAB_GREETING.7.2"
+msgid "I think I forgot how nice it is to have visitors."
+msgstr "我都忘了有人来是件好事了。\n（好感度为 7）"
+
+#. STRINGS.HERMITCRAB_GREETING.7.3
+msgctxt "STRINGS.HERMITCRAB_GREETING.7.3"
+msgid "I've been awfully hard on you, haven't I?"
+msgstr "我之前对你不太客气，是不是？\n（好感度为 7）"
+
+#. STRINGS.HERMITCRAB_GREETING.8.1
+msgctxt "STRINGS.HERMITCRAB_GREETING.8.1"
+msgid "Hello again!"
+msgstr "又来了啊！\n（好感度为 8）"
+
+#. STRINGS.HERMITCRAB_GREETING.8.2
+msgctxt "STRINGS.HERMITCRAB_GREETING.8.2"
+msgid "Well, if it isn't %s!"
+msgstr "哎呀, 又是你啊， %s!\n（好感度为 8）"
+
+#. STRINGS.HERMITCRAB_GREETING.9.1
+msgctxt "STRINGS.HERMITCRAB_GREETING.9.1"
+msgid "It's so nice to see you, dearie!"
+msgstr "很高兴见到你，亲爱的！\n（好感度为 9）"
+
+#. STRINGS.HERMITCRAB_GREETING.9.2.1
+msgctxt "STRINGS.HERMITCRAB_GREETING.9.2.1"
+msgid "This world is so full of dangers..."
+msgstr "这个世界充满了危险……\n（好感度为 9）"
+
+#. STRINGS.HERMITCRAB_GREETING.9.2.2
+msgctxt "STRINGS.HERMITCRAB_GREETING.9.2.2"
+msgid "You be careful out there, alright?"
+msgstr "你在外面当心点，知道吗？\n（好感度为 9）"
+
+#. STRINGS.HERMITCRAB_GREETING.10.1
+msgctxt "STRINGS.HERMITCRAB_GREETING.10.1"
+msgid "How have you been, dearie?"
+msgstr "你最近怎么样，亲爱的？\n（好感度已满）"
+
+#. STRINGS.HERMITCRAB_GREETING.10.2
+msgctxt "STRINGS.HERMITCRAB_GREETING.10.2"
+msgid "If it isn't my favorite visitor!"
+msgstr "我最喜欢的客人又来了！\n（好感度已满）"
+
+#. STRINGS.HERMITCRAB_GREETING.10.3
+msgctxt "STRINGS.HERMITCRAB_GREETING.10.3"
+msgid "Are you eating enough?"
+msgstr "最近胃口好吗？\n（好感度已满）"
+
+#. STRINGS.HERMITCRAB_LEVEL10_LOWHEALTH.1.1
+msgctxt "STRINGS.HERMITCRAB_LEVEL10_LOWHEALTH.1.1"
+msgid "Goodness, what happened to you?"
+msgstr "天啊，你怎么了？\n（好感度已满，但你生命值...）"
+
+#. STRINGS.HERMITCRAB_LEVEL10_LOWHEALTH.1.2
+msgctxt "STRINGS.HERMITCRAB_LEVEL10_LOWHEALTH.1.2"
+msgid " You need to be more careful!"
+msgstr "你要更加小心一点！\n（好感度已满，但你生命值...）"
+
+#. STRINGS.HERMITCRAB_LEVEL10_LOWHUNGER.1.1
+msgctxt "STRINGS.HERMITCRAB_LEVEL10_LOWHUNGER.1.1"
+msgid "Hmph... you look skinny."
+msgstr "恩……你看着好瘦。\n（好感度已满，但你该吃东西了）"
+
+#. STRINGS.HERMITCRAB_LEVEL10_LOWHUNGER.1.2
+msgctxt "STRINGS.HERMITCRAB_LEVEL10_LOWHUNGER.1.2"
+msgid "Have you been eating well?"
+msgstr "最近吃的好吗？\n（好感度已满，但你该吃东西了）"
+
+#. STRINGS.HERMITCRAB_LEVEL10_LOWSANITY.1.1
+msgctxt "STRINGS.HERMITCRAB_LEVEL10_LOWSANITY.1.1"
+msgid "You look like something's troubling you."
+msgstr "你看起来有心事。\n（好感度已满，但你可能需要和影怪战斗了）"
+
+#. STRINGS.HERMITCRAB_LEVEL10_LOWSANITY.1.2
+msgctxt "STRINGS.HERMITCRAB_LEVEL10_LOWSANITY.1.2"
+msgid "Is everything alright, dearie?"
+msgstr "一切都还好吧，亲爱的？\n（好感度已满，但你可能需要和影怪战斗了）"
+
+#. STRINGS.HERMITCRAB_LEVEL10_PLAYERGOOD.1
+msgctxt "STRINGS.HERMITCRAB_LEVEL10_PLAYERGOOD.1"
+msgid "Glad to see you looking well, dearie."
+msgstr "看你健康，我就放心了，亲爱的。\n（好感度已满）"
+
+#. STRINGS.HERMITCRAB_WANT_HOUSE.1
+msgctxt "STRINGS.HERMITCRAB_WANT_HOUSE.1"
+msgid "I could really use some help fixing up my house..."
+msgstr "谁来帮我修修房子啊……（好感度已满，完全修好房子以获得珍珠的珍珠）"
+
+# ================================ 寄居蟹商店解锁提示 ================================
+#. STRINGS.HERMITCRAB_STORE_UNLOCK_1.1.1
+msgctxt "STRINGS.HERMITCRAB_STORE_UNLOCK_1.1.1"
+msgid "So do you want to trade?"
+msgstr "你想换点什么吗？\n"
+
+#. STRINGS.HERMITCRAB_STORE_UNLOCK_1.1.2
+msgctxt "STRINGS.HERMITCRAB_STORE_UNLOCK_1.1.2"
+msgid "or are you just wasting my time?"
+msgstr "还是只是想浪费我的时间？\n（现在你可以换蓝图和贝壳钟包了）"
+
+#. STRINGS.HERMITCRAB_STORE_UNLOCK_2.1.1
+msgctxt "STRINGS.HERMITCRAB_STORE_UNLOCK_2.1.1"
+msgid "I miiight have some lures to trade..."
+msgstr "我也许有点鱼饵能跟你交换……"
+
+#. STRINGS.HERMITCRAB_STORE_UNLOCK_2.1.2
+msgctxt "STRINGS.HERMITCRAB_STORE_UNLOCK_2.1.2"
+msgid "if you can afford them."
+msgstr "如果你能买的起的话。\n（可以换破烂浮标和破烂钓具箱了）"
+
+#. STRINGS.HERMITCRAB_STORE_UNLOCK_3.1.1
+msgctxt "STRINGS.HERMITCRAB_STORE_UNLOCK_3.1.1"
+msgid "Alright, you've twisted my claw."
+msgstr "好吧，你赢了。"
+
+#. STRINGS.HERMITCRAB_STORE_UNLOCK_3.1.2
+msgctxt "STRINGS.HERMITCRAB_STORE_UNLOCK_3.1.2"
+msgid " I'll show you my GOOD lures."
+msgstr "我来给你看看我的好鱼饵。\n（季节鱼饵解锁）"
+
+#. STRINGS.HERMITCRAB_STORE_UNLOCK_4.1.1
+msgctxt "STRINGS.HERMITCRAB_STORE_UNLOCK_4.1.1"
+msgid "I've got some new things to trade"
+msgstr "我有新东西可以跟你换了"
+
+#. STRINGS.HERMITCRAB_STORE_UNLOCK_4.1.2
+msgctxt "STRINGS.HERMITCRAB_STORE_UNLOCK_4.1.2"
+msgid "but they don't come cheap!"
+msgstr "但是它们可不便宜！\n（高级浮标和鱼食解锁）"
+
+#. STRINGS.HERMITCRAB_STORE_UNLOCK_5.1.1
+msgctxt "STRINGS.HERMITCRAB_STORE_UNLOCK_5.1.1"
+msgid "This old shell must be going soft..."
+msgstr "这个老壳子变得软了……"
+
+#. STRINGS.HERMITCRAB_STORE_UNLOCK_5.1.2
+msgctxt "STRINGS.HERMITCRAB_STORE_UNLOCK_5.1.2"
+msgid "I put something special in the shop."
+msgstr "我商店里有了特殊物品。\n（超级钓具箱解锁）"
+
+# ================================ 生存难度提示 ================================
+# ================================ 	可能不太适合新手，以单人为准。================================
+# ================================ 	如果是不太擅长的角色旅游也会翻车，如果是多人的话受难角色也是有一点用处的 ================================
+#. STRINGS.CHARACTER_SURVIVABILITY.default
+msgctxt "STRINGS.CHARACTER_SURVIVABILITY.default"
+msgid "Unknown"
+msgstr "未知"
+
+#. STRINGS.CHARACTER_SURVIVABILITY.random
+msgctxt "STRINGS.CHARACTER_SURVIVABILITY.random"
+msgid "Unknown"
+msgstr "你猜？"
+
+# ================================ 	1.非常强力的缺德角色 ================================
+#. STRINGS.CHARACTER_SURVIVABILITY.wanda
+msgctxt "STRINGS.CHARACTER_SURVIVABILITY.wanda"
+msgid "Grim"
+msgstr "旅游"
+
+
+#. STRINGS.CHARACTER_SURVIVABILITY.wolfgang
+msgctxt "STRINGS.CHARACTER_SURVIVABILITY.wolfgang"
+msgid "Grim"
+msgstr "旅游"
+
+#. STRINGS.CHARACTER_SURVIVABILITY.wortox
+msgctxt "STRINGS.CHARACTER_SURVIVABILITY.wortox"
+msgid "Grim"
+msgstr "旅游"
+
+#. STRINGS.CHARACTER_SURVIVABILITY.wendy
+msgctxt "STRINGS.CHARACTER_SURVIVABILITY.wendy"
+msgid "Slim"
+msgstr "划水"
+
+# ================================ 	2.有一定必不可少的或强大的能力但是玩起来更难的角色 ================================
+#. STRINGS.CHARACTER_SURVIVABILITY.winona
+msgctxt "STRINGS.CHARACTER_SURVIVABILITY.winona"
+msgid "Slim"
+msgstr "麻烦"
+
+#. STRINGS.CHARACTER_SURVIVABILITY.wurt
+msgctxt "STRINGS.CHARACTER_SURVIVABILITY.wurt"
+msgid "Slim"
+msgstr "麻烦"
+
+#. STRINGS.CHARACTER_SURVIVABILITY.wx78
+msgctxt "STRINGS.CHARACTER_SURVIVABILITY.wx78"
+msgid "Grim"
+msgstr "麻烦"
+
+#. STRINGS.CHARACTER_SURVIVABILITY.warly
+msgctxt "STRINGS.CHARACTER_SURVIVABILITY.warly"
+msgid "Grim"
+msgstr "麻烦"
+
+#. STRINGS.CHARACTER_SURVIVABILITY.wickerbottom
+msgctxt "STRINGS.CHARACTER_SURVIVABILITY.wickerbottom"
+msgid "Grim"
+msgstr "麻烦"
+
+#. STRINGS.CHARACTER_SURVIVABILITY.wathgrithr
+msgctxt "STRINGS.CHARACTER_SURVIVABILITY.wathgrithr"
+msgid "Slim"
+msgstr "麻烦"
+
+#. STRINGS.CHARACTER_SURVIVABILITY.webber
+msgctxt "STRINGS.CHARACTER_SURVIVABILITY.webber"
+msgid "Grim"
+msgstr "麻烦"
+
+#. STRINGS.CHARACTER_SURVIVABILITY.wormwood
+msgctxt "STRINGS.CHARACTER_SURVIVABILITY.wormwood"
+msgid "Grim"
+msgstr "麻烦"
+
+# ================================ 	3.没啥大能力，就算是工具人都可有可无的角色 ================================
+#. STRINGS.CHARACTER_SURVIVABILITY.walter
+msgctxt "STRINGS.CHARACTER_SURVIVABILITY.walter"
+msgid "Slim"
+msgstr "头痛"
+
+#. STRINGS.CHARACTER_SURVIVABILITY.willow
+msgctxt "STRINGS.CHARACTER_SURVIVABILITY.willow"
+msgid "Slim"
+msgstr "头痛"
+
+#. STRINGS.CHARACTER_SURVIVABILITY.woodie
+msgctxt "STRINGS.CHARACTER_SURVIVABILITY.woodie"
+msgid "Slim"
+msgstr "头痛"
+
+
+# ================================ 	4.浪费前期宝贵的选人机会的角色 ================================
+#. STRINGS.CHARACTER_SURVIVABILITY.waxwell
+msgctxt "STRINGS.CHARACTER_SURVIVABILITY.waxwell"
+msgid "Grim"
+msgstr "受难"
+
+#. STRINGS.CHARACTER_SURVIVABILITY.wes
+msgctxt "STRINGS.CHARACTER_SURVIVABILITY.wes"
+msgid "None"
+msgstr "受难"
+
+#. STRINGS.CHARACTER_SURVIVABILITY.wilson
+msgctxt "STRINGS.CHARACTER_SURVIVABILITY.wilson"
+msgid "Slim"
+msgstr "受难"
+
+# ================================ 	5.模组角色 ================================
+#. STRINGS.CHARACTER_SURVIVABILITY.civi
+msgctxt "STRINGS.CHARACTER_SURVIVABILITY.civi"
+msgid "headuck"
+msgstr "真头痛鸭"
