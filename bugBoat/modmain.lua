@@ -1,0 +1,2 @@
+GLOBAL.TUNING.COM_NAALOH4_ALLOW_BUG_BOAT=(GetModConfigData("allowBugBoat") == 1)
+GLOBAL.TUNING.COM_NAALOH4_KEEP_BUG_BOAT=(GetModConfigData("keepBugBoat") == 1)
