@@ -4,12 +4,13 @@ GLOBAL.TUNING.COM_NAALOH4_KEEP_BUG_BOAT=(GetModConfigData("keepBugBoat") == 1)
 AddStategraphPostInit("boat", function(inst_sg)
     local oldPlaceFn = inst_sg.states.place.events.animover.fn
     local oldIdleFn = inst_sg.states.idle.events.death.fn
-    inst_sg.states.place.events.animover.fn = function(inst_boat,data)
-        -- 如果开启了禁止无敌船，那么在船展开后重新给船回血来防止船死亡。
-        if (not TUNING.COM_NAALOH4_ALLOW_BUG_BOAT) then
-            inst_boat.components.health:SetPercent(1, false, nil)
+
+    inst_sg.states.place.events.animover.fn = function(inst)
+        if TUNING.COM_NAALOH4_ALLOW_BUG_BOAT then
+            inst.sg:GoToState("idle")
+        else
+            return oldPlaceFn(inst_boat,data)
         end
-        return oldPlaceFn(inst_boat,data)
     end
 
     inst_sg.states.idle.events.death.fn = function(inst_boat, data)
