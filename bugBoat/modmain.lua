@@ -1,15 +1,16 @@
-GLOBAL.TUNING.COM_NAALOH4_ALLOW_BUG_BOAT=(GetModConfigData("allowBugBoat") == 1)
-GLOBAL.TUNING.COM_NAALOH4_KEEP_BUG_BOAT=(GetModConfigData("keepBugBoat") == 1)
+TUNING = GLOBAL.TUNING
+TUNING.COM_NAALOH4_ALLOW_BUG_BOAT=(GetModConfigData("allowBugBoat") == 1)
+TUNING.COM_NAALOH4_KEEP_BUG_BOAT=(GetModConfigData("keepBugBoat") == 1)
 
 AddStategraphPostInit("boat", function(inst_sg)
     local oldPlaceFn = inst_sg.states.place.events.animover.fn
     local oldIdleFn = inst_sg.states.idle.events.death.fn
 
-    inst_sg.states.place.events.animover.fn = function(inst)
+    inst_sg.states.place.events.animover.fn = function(inst_boat, data)
         if TUNING.COM_NAALOH4_ALLOW_BUG_BOAT then
-            inst.sg:GoToState("idle")
+            inst_boat.sg:GoToState("idle")
         else
-            return oldPlaceFn(inst_boat,data)
+            return oldPlaceFn(inst_boat, data)
         end
     end
 
