@@ -3,7 +3,7 @@ description = [[
 无敌船配置二则
 ]]
 author = "NaAlOH4"
-version = "2.0"
+version = "2.1"
 forumthread = ""
 api_version = 10
 
