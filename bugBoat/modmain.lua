@@ -36,16 +36,23 @@ AddComponentPostInit("boatphysics", function(inst_component)
     end
 end)
 
+-- 一看源码的2^n就知道是搞位运算了，那么 CollidesWith 肯定是调用 c 层的位或。因为这俩值位或和加法结果一样，所以就直接加起来得了。
+assert(GLOBAL.COLLISION.OBSTACLES == 512 and GLOBAL.COLLISION.SMALLOBSTACLES == 8192, "WTF")
+local TARGET_COLLIDES_BITMASK = GLOBAL.COLLISION.OBSTACLES + GLOBAL.COLLISION.SMALLOBSTACLES
+
 AddPrefabPostInit("stagehand", function(inst_prefab)
     local oldFn = inst_prefab.ChangePhysics
     inst_prefab.ChangePhysics = function(inst, is_standing)
         local oldStatus = inst:HasTag("blocker")
-        oldFn(inst,is_standing)
+        oldFn(inst, is_standing)
         local newStatus = inst:HasTag("blocker") -- 这里逻辑可以简化，但我懒。
 
-        if(newStatus and (newStatus ~= oldStatus) and TUNING.COM_NAALOH4_ALLOW_STAGEHAND_BOAT_FLY) then
-            inst.Physics:CollidesWith(GLOBAL.COLLISION.OBSTACLES)
-            inst.Physics:CollidesWith(GLOBAL.COLLISION.SMALLOBSTACLES)
+        if (newStatus and (newStatus ~= oldStatus) and TUNING.COM_NAALOH4_ALLOW_STAGEHAND_BOAT_FLY) then
+            inst.Physics:CollidesWith(TARGET_COLLIDES_BITMASK)
         end
+    end
+
+    if (inst_prefab:HasTag("blocker") and TUNING.COM_NAALOH4_ALLOW_STAGEHAND_BOAT_FLY) then
+        inst.Physics:CollidesWith(TARGET_COLLIDES_BITMASK)
     end
 end)
