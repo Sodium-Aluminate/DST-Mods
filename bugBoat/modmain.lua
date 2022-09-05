@@ -1,6 +1,8 @@
 TUNING = GLOBAL.TUNING
-TUNING.COM_NAALOH4_ALLOW_BUG_BOAT=(GetModConfigData("allowBugBoat") == 1)
-TUNING.COM_NAALOH4_KEEP_BUG_BOAT=(GetModConfigData("keepBugBoat") == 1)
+TUNING.COM_NAALOH4_ALLOW_BUG_BOAT = (GetModConfigData("allowBugBoat") == 1)
+TUNING.COM_NAALOH4_KEEP_BUG_BOAT = (GetModConfigData("keepBugBoat") == 1)
+TUNING.COM_NAALOH4_ALLOW_BOAT_MOVE_ON_GROUND = (GetModConfigData("allowBoatMoveOnGround") == 1)
+
 
 AddStategraphPostInit("boat", function(inst_sg)
     local oldPlaceFn = inst_sg.states.place.events.animover.fn
@@ -17,8 +19,19 @@ AddStategraphPostInit("boat", function(inst_sg)
     inst_sg.states.idle.events.death.fn = function(inst_boat, data)
         -- 如果是是读档造成的死亡，且开启了保护船的功能，那么忽略这次死亡。
         if (data and data.cause == "file_load" and TUNING.COM_NAALOH4_KEEP_BUG_BOAT) then
-            return;
+            return ;
         end
-        return oldIdleFn(inst_boat,data)
+        return oldIdleFn(inst_boat, data)
+    end
+end)
+
+AddComponentPostInit("boatphysics", function(inst_component)
+    oldFn = inst_component.SetHalting
+    inst_component.SetHalting = function(inst, shouldHalt)
+        if (shouldHalt and TUNING.COM_NAALOH4_ALLOW_BOAT_MOVE_ON_GROUND) then
+            print("游戏尝试搁浅一艘船，被咕了。")
+        else
+            oldFn(inst, shouldHalt)
+        end
     end
 end)

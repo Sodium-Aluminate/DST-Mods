@@ -1,17 +1,18 @@
+error("这个 mod 还没有完成。this mod is unfinished")
+
 TUNING = GLOBAL.TUNING
 setmetatable = GLOBAL.setmetatable
 type = GLOBAL.type
 ipairs = GLOBAL.ipairs
 assert = GLOBAL.assert
 
+TUNING.COM_NAALOH4_ALLOW_SWIM = (GetModConfigData("allowSwim") == 1) -- 1: can swim; 0: can't swim.
 
-TUNING.COM_NAALOH4_ALLOW_SWIM=(GetModConfigData("allowSwim") == 1) -- 1: can swim; 0: can't swim.
-
-TUNING.COM_NAALOH4_CRAFT_CONDITION=({
-    [-1]="NOT_HOOK", -- use original code
-    [0]= "DISABLE_CHECK", -- allow any craft
-    [1]= "CHECK_BUSY", -- disallow craft when busy
-    [2]= "STRICT", -- only allow craft when idle/moving/running
+TUNING.COM_NAALOH4_CRAFT_CONDITION = ({
+    [-1] = "NOT_HOOK", -- use original code
+    [0] = "DISABLE_CHECK", -- allow any craft
+    [1] = "CHECK_BUSY", -- disallow craft when busy
+    [2] = "STRICT", -- only allow craft when idle/moving/running
 })[GetModConfigData("banBusy")]
 
 assert(TUNING.COM_NAALOH4_CRAFT_CONDITION)
@@ -26,7 +27,7 @@ path 可以是数组也可以是字符串，如果是字符串则视为是包含
 
 ]]
 local function tableValueOverride(rawTable, path, targetValue)
-    local hookingPath = type(path)=="string" and {path} or path
+    local hookingPath = type(path) == "string" and { path } or path
 
     local toReturn = setmetatable({}, {
         ["com.NaAlOH4.tableValueOverride.rawTable"] = rawTable,
@@ -37,17 +38,17 @@ local function tableValueOverride(rawTable, path, targetValue)
             local currentRawTable = inst["com.NaAlOH4.tableValueOverride.rawTable"]
             local currentHookingPath = inst["com.NaAlOH4.tableValueOverride.hookingPath"]
             local currentTargetValue = inst["com.NaAlOH4.tableValueOverride.targetValue"]
-            if (#currentHookingPath == 0)then
+            if (#currentHookingPath == 0) then
                 return currentRawTable[key]
             end
-            if(currentHookingPath[1]==key)then
-                if(#currentHookingPath == 1)then
+            if (currentHookingPath[1] == key) then
+                if (#currentHookingPath == 1) then
                     return currentTargetValue
                 else
                     local shadow = {}
                     for i, v in ipairs(currentRawTable) do
-                        if (i > 1)then
-                            shadow[i-1]=v
+                        if (i > 1) then
+                            shadow[i - 1] = v
                         end
                     end
                     return tableValueOverride(currentRawTable[key], shadow, currentTargetValue)
@@ -66,11 +67,11 @@ AddComponentPostInit("builder", function(Builder, instEntitiy)
 
     function Builder.MakeRecipe(Builder, recipe, pt, rot, skin, onsuccess)
         old_HasStateTag_fn = Builder.inst.sg.HasStateTag
-        local HookedBuilder = tableValueOverride(Builder, {"inst","sg","HasStateTag", function(sg, tagName)
-            if(tagName=="drowning")then
+        local HookedBuilder = tableValueOverride(Builder, { "inst", "sg", "HasStateTag", function(sg, tagName)
+            if (tagName == "drowning") then
 
             end
-        end})
+        end })
         return oldMakeRecipeFn(HookedBuilder, recipe, pt, rot, skin, onsuccess)
     end
 
