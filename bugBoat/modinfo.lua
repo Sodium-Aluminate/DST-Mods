@@ -1,6 +1,6 @@
 name = "bug boat"
 description = [[
-无敌船配置二则
+无敌船配置四则
 ]]
 author = "NaAlOH4"
 version = "2.1"
