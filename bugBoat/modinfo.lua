@@ -3,7 +3,7 @@ description = [[
 无敌船配置二则
 ]]
 author = "NaAlOH4"
-version = "1.3"
+version = "2.0"
 forumthread = ""
 api_version = 10
 
@@ -21,8 +21,8 @@ configuration_options = {
         label = "允许无敌船",
         hover = "是否能通过经典手段获取无敌船",
         options = {
-            { description = "禁止", data = 0, hover = "正常的获取无敌船手段被修复" },
-            { description = "允许", data = 1, hover = "和原版游戏相同" }
+            { description = "禁止", data = 0, hover = "和原版游戏相同" },
+            { description = "允许", data = 1, hover = "和旧版游戏相同" }
         },
         default = 1,
     },
@@ -43,6 +43,16 @@ configuration_options = {
         options = {
             { description = "禁用", data = 0, hover = "和原版游戏相同" },
             { description = "启用", data = 1, hover = "《科雷你坏事做尽.jpg》" },
+        },
+        default = 1,
+    },
+    {
+        name = "allowStagehandBoatFly",
+        label = "允许飞升",
+        hover = "允许与船体碰撞箱重合的舞台之手将船顶飞",
+        options = {
+            { description = "禁止", data = 0, hover = "和原版游戏相同" },
+            { description = "允许", data = 1, hover = "《科雷你坏事做尽.jpg》" },
         },
         default = 1,
     }
