@@ -3,6 +3,7 @@ TUNING.COM_NAALOH4_ALLOW_BUG_BOAT = (GetModConfigData("allowBugBoat") == 1)
 TUNING.COM_NAALOH4_KEEP_BUG_BOAT = (GetModConfigData("keepBugBoat") == 1)
 TUNING.COM_NAALOH4_ALLOW_BOAT_MOVE_ON_GROUND = (GetModConfigData("allowBoatMoveOnGround") == 1)
 TUNING.COM_NAALOH4_ALLOW_STAGEHAND_BOAT_FLY = (GetModConfigData("allowStagehandBoatFly") == 1)
+assert = GLOBAL.assert
 
 AddStategraphPostInit("boat", function(inst_sg)
     local oldPlaceFn = inst_sg.states.place.events.animover.fn
@@ -53,6 +54,6 @@ AddPrefabPostInit("stagehand", function(inst_prefab)
     end
 
     if (inst_prefab:HasTag("blocker") and TUNING.COM_NAALOH4_ALLOW_STAGEHAND_BOAT_FLY) then
-        inst.Physics:CollidesWith(TARGET_COLLIDES_BITMASK)
+        inst_prefab.Physics:CollidesWith(TARGET_COLLIDES_BITMASK)
     end
 end)
