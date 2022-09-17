@@ -269,8 +269,7 @@ local rawOnGetGroupMsgResult = function (result, isSuccessful, resultCode)
 end
 
 local function onGetGroupMsgResult(result,isSuccessful,resultCode)
-    rawOnGetGroupMsgResult( result,isSuccessful,resultCode)
-    --GLOBAL.pcall(rawOnGetGroupMsgResult, result,isSuccessful,resultCode)
+    GLOBAL.pcall(rawOnGetGroupMsgResult, result,isSuccessful,resultCode)
 end
 
 
