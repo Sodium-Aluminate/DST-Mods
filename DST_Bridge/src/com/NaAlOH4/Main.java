@@ -1,129 +1,94 @@
 package com.NaAlOH4;
+
+import com.NaAlOH4.bilibili.BilibiliDanmakuMessageClient;
+import com.NaAlOH4.dst.DSTService;
+import com.NaAlOH4.telegram.TelegramMessageClient;
 import com.google.gson.Gson;
-import com.sun.net.httpserver.HttpServer;
-import okhttp3.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 public class Main {
-    private static final BlockingQueue<Update> q = new LinkedBlockingQueue<>();
-    private static final Gson gson = new Gson();
-    private static final OkHttpClient client = new OkHttpClient.Builder().build();
-    private static final String sendMessageUrl = "https://api.telegram.org/bot"+System.getenv("bottoken")+"/sendMessage";
-    private static final String getUpdateUrl = "https://api.telegram.org/bot"+System.getenv("bottoken")+"/getUpdates";
-    private static final String chat_id= System.getenv("chatid");
-    private static int offset = 0;
-    public static void main(String[] arg) throws Exception {
+    public static final String HELP_STR = """
+            需要指定一个配置文件来启动。
+            配置文件应为一个  json，其格式应如 example.json 所示。
+            配置文件中的 "comment" 不是必要内容。""";
 
-        HttpServer server = HttpServer.create(new InetSocketAddress(5826), 0);
-        server.createContext("/sendMessage", exchange -> {
-            String requestMethod = exchange.getRequestMethod();
-            if ("POST".equals(requestMethod)) {
-                InputStream requestBody = exchange.getRequestBody();
-                sendMessage(new String(requestBody.readAllBytes()));
-            } else {
-                System.err.println("/sendMessage got a wrong method: " + requestMethod);
+    private static final List<MessageClient> clients = Collections.synchronizedList(new LinkedList<>()) ;
+
+    public static void main(String[] args) {
+        boolean printHelp = false;
+        if (args.length == 0) {
+            printHelp = true;
+        }
+
+        for (String arg : args) {
+            if (arg.equals("--help") || arg.equals("-h")) {
+                printHelp = true;
             }
-            exchange.sendResponseHeaders(200, 0); // 没错这里是写死的哈哈哈
-            OutputStream os = exchange.getResponseBody();
-            os.flush();
-            os.close();
-            exchange.close();
-        });
-        server.createContext("/getMessage", exchange -> {
-            OutputStream os = exchange.getResponseBody();
-            exchange.sendResponseHeaders(200, 0);
-            Update update = q.poll();
-            if (update!= null) {
-                println(gson.toJson(update));
-                os.write(gson.toJson(update)
-                        .getBytes(StandardCharsets.UTF_8));
+            break;
+        }
+        if (printHelp) {
+            System.out.println(HELP_STR);
+        }
+
+        if (args.length > 1) {
+            System.err.println("too many args.");
+        }
+
+        String configStr = Tools.readFile(args[0]);
+
+        Gson gson = new Gson();
+        JsonObject configJson = gson.fromJson(configStr, JsonObject.class);
+
+
+        // MessageManager
+        if (configJson.has("telegram")) {
+            JsonArray telegramConfigs = configJson.getAsJsonArray("telegram");
+            for (JsonElement telegramConfig : telegramConfigs) {
+                clients.add(gson.fromJson(telegramConfig, TelegramMessageClient.class));
+                System.out.println("tg service created");
             }
-            os.flush();
-            os.close();
-            exchange.close();
-        });
-        server.start();
-
-        new Thread(() -> {
-            OkHttpClient longPullClient = new OkHttpClient.Builder()
-                    .readTimeout(120, TimeUnit.SECONDS)
-                    .build();
-
-            while (true) {
-                try {
-                    Response response = longPullClient.newCall(
-                            new Request.Builder()
-                                    .url(getUpdateUrl)
-                                    .post(new FormBody.Builder()
-                                            .add("offset", String.valueOf(offset))
-                                            .add("timeout", "110")
-                                            .build()
-                                    )
-                                    .build()
-                    ).execute();
-                    ResponseBody body = response.body();
-                    if(body!=null) {
-                        String updateReturnString = body.string();
-                        UpdateReturn updateReturn = gson.fromJson(updateReturnString, UpdateReturn.class);
-                        if(updateReturn.ok && updateReturn.result!=null){
-                            for (Update update:updateReturn.result) {
-                                if(checkAndParseUpdate(update)){
-                                    q.add(update);
-                                }
-                            }
-                        }
-                    }
-                    response.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        }
+        if (configJson.has("dst")) {
+            JsonObject dstConfigs = configJson.getAsJsonObject("dst");
+            DSTService dstService = gson.fromJson(dstConfigs, DSTService.class);
+            dstService.setOnNewClient(e -> {
+                clients.add(e);
+                e.setMessageHandler(message -> sendMessageToOtherClient(message, e));
+                System.out.println("new world joined: "+e);
+            });
+            dstService.setOnClientRevoke(e -> {
+                clients.remove(e);
+                System.out.println("world revoked: "+e);
+            });
+            dstService.init();
+            System.out.println("dst service created");
+        }
+        if (configJson.has("bilibili")) {
+            JsonArray bilibiliConfigs = configJson.getAsJsonArray("bilibili");
+            for (JsonElement bilibiliConfig : bilibiliConfigs) {
+                clients.add(gson.fromJson(bilibiliConfig, BilibiliDanmakuMessageClient.class));
+                System.out.println("bilibili service created");
             }
-        }).start();
-    }
+        }
 
-    private static boolean checkAndParseUpdate(Update update) {
-        assert offset < update.update_id+1;
-        offset = update.update_id+1;
-        if(update.message == null||
-                update.message.from==null||
-                update.message.from.first_name==null||
-                update.message.chat==null||
-                update.message.chat.getName()==null||
-                update.message.getString() == null
-        )return false;
-        update.message.text = update.message.getString();
-        update.message.chat.title = update.message.chat.getName();
-        return true;
-    }
-
-    private static void sendMessage(String s) {
-        try {
-            client.newCall(
-                    new Request.Builder()
-                            .url(sendMessageUrl)
-                            .post(new FormBody.Builder()
-                                    .add("chat_id", chat_id)
-                                    .add("text", s)
-                                    .build()
-                            )
-                            .build()
-            ).execute();
-        } catch (IOException e) {
-            e.printStackTrace();
+        for (MessageClient client : clients) {
+            client.init();
+            client.setMessageHandler(message -> sendMessageToOtherClient(message, client));
         }
     }
 
-
-    public static void println(Object o) {
-        System.out.println(o);
+    private static void sendMessageToOtherClient(Message message, MessageClient client) {
+        for (int i = 0; i < clients.size(); i++) {
+            MessageClient currentClient = clients.get(i);
+            if (currentClient != client) {
+                currentClient.sendMessage(message);
+            }
+        }
     }
 }

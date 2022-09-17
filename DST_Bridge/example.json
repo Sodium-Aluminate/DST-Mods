@@ -1,0 +1,29 @@
+{
+  "comment": "任何不需要的都可以整项删掉，如，你不需要弹幕连接到游戏里，就可以删掉 bilibili 部分；不需要连接到 telegram，就可以删掉 telegram 部分",
+  "telegram": [
+    {
+      "comment_1": "key 需要从 @botFather 处获取（token），target_group_id 是目标群组的 id, allow_other_source 默认为 false，如果为 true 则其他群/私聊消息都会被转发。",
+      "comment_2": "虽然这里是数组，但只建议开一个 telegram，开多个会导致消息互相转发。",
+      "name": "tg_test",
+      "key": "114514:1919810XianBeiZhuiWeiLeHeiSeGaoJiChe",
+      "target_group_id": "-1001145141919810",
+      "allow_other_source": true
+    }
+  ],
+  "bilibili": [
+    {
+      "comment": "id 为直播间 id，如网址 https://live.bilibili.com/24162718 中结尾的部分",
+      "id": "24162718",
+      "name": "料理的直播间"
+    }
+  ],
+  "dst": {
+    "comment_0": "注意：dst 配置不是一个 array，抄配置时请不要混淆",
+    "comment_1": "为了安全性，请务必选择开启反代实现 https，或者仅本地使用",
+    "comment_2": "如果不是仅本地，请确保设置好反代+端口仅限本地访问",
+    "comment_3": "密码须不小于 16 位，请使用脸滚键盘的密码而不是复制粘贴",
+    "comment_4": "本地是指和饥荒服务器在一起，而不一定是你面前的电脑。如果你买了vps跑独立服务器，那需要放在服务器上；如果是你本地开服，那就本地就好。如果你经常切换，那就放在服务器https。",
+    "port": 7890,
+    "password": "YLpLCgIVbpcBMyR1Mfoo5IUFSLeh3muJRH7T6lGzKsWwZHWlmPV3k0oQxLXxP6bWXDAjJPju38AxMSBqvdTy445DJ4MqIZzVMk3nb6hsokRDXHFYXfWc9CvgnsRNb0zg"
+  }
+}

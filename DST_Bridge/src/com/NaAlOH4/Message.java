@@ -1,14 +1,24 @@
 package com.NaAlOH4;
 
+import org.jetbrains.annotations.Nullable;
 
-public class Message {
-    public User from;
-    public Chat chat;
-    public String text;
-    public String caption;
-    public String getString(){
-        if(text!=null)return text;
-        if(caption!=null)return "[Media] "+caption;
-        return null;
+public abstract class Message {
+    public abstract String getSenderName();
+    public abstract String getText();
+    @Nullable
+    public abstract String getAdditionalPrefix();
+    public abstract MessageClient getClientFrom();
+
+    @Override
+    public String toString() {
+        String s = getAdditionalPrefix();
+        if (s != null) {
+            s = "(" + s + ")";
+        } else {
+            s = "";
+        }
+        return s + getSenderName() + "@" + getClientFrom() + ": " + getText();
     }
+
+
 }
