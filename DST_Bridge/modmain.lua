@@ -117,7 +117,7 @@ function configuration:OnLoad(data)
     self.noHTTPS = data.noHTTPS
 end
 
-local SAVE_FILE_PATH = "mod_config_data/NaAlOH4_dst_bridge"
+local SAVE_FILE_PATH = "NaAlOH4_dst_bridge"
 GLOBAL.TheSim:GetPersistentString(SAVE_FILE_PATH, function(read_success, str)
     if read_success then
         local success, data = GLOBAL.RunInSandboxSafe(str)
