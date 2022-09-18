@@ -86,7 +86,7 @@ end
 
 function configuration:OnSave()
     local data = {}
-    if (not data:Available()) then
+    if (not self:Available()) then
         return data;
     end
     data.serverAddr = self.serverAddr
