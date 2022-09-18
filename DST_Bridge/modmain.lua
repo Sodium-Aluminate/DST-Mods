@@ -9,7 +9,7 @@ local function clearTaskCache()  end
 ------------
 local configuration = {}
 
-GLOBAL.dstBridgeConf = configuration
+-- GLOBAL.dstBridgeConf = configuration
 
 -- 检查配置是否有效（必须有服务器地址、本世界名字、服务器密码或服务器无需密码标签）
 function configuration:Available()
@@ -110,15 +110,32 @@ function configuration:OnLoad(data)
     self.noHTTPS = data.noHTTPS
 end
 
+local SAVE_FILE_PATH ="mod_config_data/NaAlOH4_dst_bridge"
+GLOBAL.TheSim:GetPersistentString(SAVE_FILE_PATH, function(read_success, str)
+    if read_success then
+        local success, data = GLOBAL.RunInSandboxSafe(str)
+        if success and str:len() > 0 then
+            configuration:OnLoad(data)
+        end
+    end
+end)
+local function SaveConf()
+    if(configuration:Available())then
+        GLOBAL.SavePersistentString(SAVE_FILE_PATH, GLOBAL.DataDumper(configuration:OnSave(), nil, true))
+    end
+end
+
 
 function configuration:SetServerAddr(addr)
     self.serverAddr=addr
     self:_clearCache()
+    SaveConf()
 end
 
 function configuration:SetWorldName(name)
     self.worldName= name
     self:_clearCache()
+    SaveConf()
 end
 
 function configuration:SetPasswd(passwd)
@@ -129,16 +146,19 @@ function configuration:SetPasswd(passwd)
         self.passwordDisabled=true
     end
     self:_clearCache()
+    SaveConf()
 end
 
 function configuration:SetPort(port)
     self.port = port
     self:_clearCache()
+    SaveConf()
 end
 
 function configuration:SetNoHTTPS(b)
     self.noHTTPS = b and true or false
     self:_clearCache()
+    SaveConf()
 end
 
 GLOBAL.b_setServerAddr = function(addr) configuration:SetServerAddr(addr) end
