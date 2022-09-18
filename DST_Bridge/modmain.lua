@@ -99,7 +99,7 @@ function configuration:OnSave()
     if (self.port) then
         data.port = self.port
     end
-    data.noHTTPS = self:_clearCache().noHTTPS
+    data.noHTTPS = self.noHTTPS
     return data
 end
 function configuration:OnLoad(data)
