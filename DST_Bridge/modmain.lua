@@ -34,7 +34,7 @@ function configuration:_GetHostUrl()
     end
     local scheme = self.noHTTPS and "http" or "https"
     local host = self.serverAddr
-    local port = ""..self.port
+    local port = self.port and (""..self.port) or nil
     self._cachedHostUrl = port and
             scheme.."://"..host..":"..port.."/" or
             scheme.."://"..host.."/"
