@@ -1,8 +1,6 @@
-
-
 local jsonUtil = require "json"
-local function clearTaskCache()  end
-
+local function clearTaskCache()
+end
 
 ------------
 --- 配置 ---
@@ -34,10 +32,10 @@ function configuration:_GetHostUrl()
     end
     local scheme = self.noHTTPS and "http" or "https"
     local host = self.serverAddr
-    local port = self.port and (""..self.port) or nil
+    local port = self.port and ("" .. self.port) or nil
     self._cachedHostUrl = port and
-            scheme.."://"..host..":"..port.."/" or
-            scheme.."://"..host.."/"
+            scheme .. "://" .. host .. ":" .. port .. "/" or
+            scheme .. "://" .. host .. "/"
     return self._cachedHostUrl
 end
 
@@ -46,15 +44,24 @@ function configuration:_GetPassword()
     return self.passwordDisabled and nil or self.password
 end
 
+local function urlEncode(str)
+    str = string.gsub(str, "([^0-9a-zA-Z !'()*._~-])",
+            function(c)
+                return string.format("%%%02X", string.byte(c))
+            end)
+    str = string.gsub(str, " ", "+")
+    return str
+end
+
 -- 获取 http push/pull 操作时所需的 url，如 https://example.com/sendMessage?serverPasswd=1145141919810
 function configuration:GetPushUrl()
     if self._cachedSendUrl then
         return self._cachedSendUrl
     end
     local passwd = self:_GetPassword()
-    local url = self:_GetHostUrl() .. "sendMessage" .. "?worldName=" .. self.worldName
+    local url = self:_GetHostUrl() .. "sendMessage" .. "?worldName=" .. urlEncode(self.worldName)
     if (passwd) then
-        url = url .. "&serverPasswd=" .. passwd
+        url = url .. "&serverPasswd=" .. urlEncode(passwd)
     end
     self._cachedSendUrl = url
     return url
@@ -64,9 +71,9 @@ function configuration:GetPullUrl()
         return self._cachedGetUrl
     end
     local passwd = self:_GetPassword()
-    local url = self:_GetHostUrl() .. "getMessage" .. "?worldName=" .. self.worldName
+    local url = self:_GetHostUrl() .. "getMessage" .. "?worldName=" .. urlEncode(self.worldName)
     if (passwd) then
-        url = url .. "&serverPasswd=" .. passwd
+        url = url .. "&serverPasswd=" .. urlEncode(passwd)
     end
     self._cachedGetUrl = url
     return url
@@ -79,38 +86,38 @@ end
 
 function configuration:OnSave()
     local data = {}
-    if(not data:Available()) then
+    if (not data:Available()) then
         return data;
     end
     data.serverAddr = self.serverAddr
     data.worldName = self.worldName
-    if(self.passwordDisabled) then
+    if (self.passwordDisabled) then
         data.passwordDisabled = true
     else
-        data.password=self.password
+        data.password = self.password
     end
-    if(self.port)then
-        data.port=self.port
+    if (self.port) then
+        data.port = self.port
     end
     data.noHTTPS = self:_clearCache().noHTTPS
     return data
 end
 function configuration:OnLoad(data)
     self:_clearCache()
-    self.serverAddr=data.serverAddr
-    self.worldName=data.worldName
-    if(data.passwordDisabled)then
-        self.passwordDisabled=true
+    self.serverAddr = data.serverAddr
+    self.worldName = data.worldName
+    if (data.passwordDisabled) then
+        self.passwordDisabled = true
     else
-        self.password=data.password
+        self.password = data.password
     end
-    if(data.port)then
-        self.port=data.port
+    if (data.port) then
+        self.port = data.port
     end
     self.noHTTPS = data.noHTTPS
 end
 
-local SAVE_FILE_PATH ="mod_config_data/NaAlOH4_dst_bridge"
+local SAVE_FILE_PATH = "mod_config_data/NaAlOH4_dst_bridge"
 GLOBAL.TheSim:GetPersistentString(SAVE_FILE_PATH, function(read_success, str)
     if read_success then
         local success, data = GLOBAL.RunInSandboxSafe(str)
@@ -120,30 +127,29 @@ GLOBAL.TheSim:GetPersistentString(SAVE_FILE_PATH, function(read_success, str)
     end
 end)
 local function SaveConf()
-    if(configuration:Available())then
+    if (configuration:Available()) then
         GLOBAL.SavePersistentString(SAVE_FILE_PATH, GLOBAL.DataDumper(configuration:OnSave(), nil, true))
     end
 end
 
-
 function configuration:SetServerAddr(addr)
-    self.serverAddr=addr
+    self.serverAddr = addr
     self:_clearCache()
     SaveConf()
 end
 
 function configuration:SetWorldName(name)
-    self.worldName= name
+    self.worldName = name
     self:_clearCache()
     SaveConf()
 end
 
 function configuration:SetPasswd(passwd)
-    if(passwd)then
-        self.password=passwd
-        self.passwordDisabled=false
+    if (passwd) then
+        self.password = passwd
+        self.passwordDisabled = false
     else
-        self.passwordDisabled=true
+        self.passwordDisabled = true
     end
     self:_clearCache()
     SaveConf()
@@ -161,33 +167,45 @@ function configuration:SetNoHTTPS(b)
     SaveConf()
 end
 
-GLOBAL.b_setServerAddr = function(addr) configuration:SetServerAddr(addr) end
-GLOBAL.b_setWorldName = function(name) configuration:SetWorldName(name) end
-GLOBAL.b_SetPasswd = function(passwd) configuration:SetPasswd(passwd) end
-GLOBAL.b_SetPort = function(port) configuration:SetPort(port) end
-GLOBAL.b_SetNoHTTPS = function(b) configuration:SetNoHTTPS(b) end
+GLOBAL.b_setServerAddr = function(addr)
+    configuration:SetServerAddr(addr)
+end
+GLOBAL.b_setWorldName = function(name)
+    configuration:SetWorldName(name)
+end
+GLOBAL.b_SetPasswd = function(passwd)
+    configuration:SetPasswd(passwd)
+end
+GLOBAL.b_SetPort = function(port)
+    configuration:SetPort(port)
+end
+GLOBAL.b_SetNoHTTPS = function(b)
+    configuration:SetNoHTTPS(b)
+end
 
 ------------
 --- 指令 ---
 ------------
 
 
-local commands = {"SetServerAddr","SetWorldName","SetPasswd", "SetPort","SetNoHTTPS"}
+local commands = { "SetServerAddr", "SetWorldName", "SetPasswd", "SetPort", "SetNoHTTPS" }
 
 for i, v in ipairs(commands) do
-    GLOBAL["b_"..v] = function(value)
-        if(GLOBAL.TheWorld and GLOBAL.TheWorld.ismastershard) then -- 地表
-            configuration[v](configuration,value)
+    GLOBAL["b_" .. v] = function(value)
+        if (GLOBAL.TheWorld and GLOBAL.TheWorld.ismastershard) then
+            -- 地表
+            configuration[v](configuration, value)
         end
         -- 摆了 转义炸就炸吧...
-        if(GLOBAL.TheWorld and not GLOBAL.TheWorld.ismastersim) then -- 客户端
-            GLOBAL.c_remote("b_"..v.."("..value..")")
+        if (GLOBAL.TheWorld and not GLOBAL.TheWorld.ismastersim) then
+            -- 客户端
+            GLOBAL.c_remote("b_" .. v .. "(" .. value .. ")")
         end
     end
 end
 
 local function addCommands()
-    if(GLOBAL.TheWorld and not GLOBAL.TheWorld.ismastersim) then
+    if (GLOBAL.TheWorld and not GLOBAL.TheWorld.ismastersim) then
         --GLOBAL.ConsoleScreen.console_edit:AddWordPredictionDictionary({ words = commands, delim = "b_", num_chars = 0 })
     end
 end
@@ -218,16 +236,15 @@ local function sendGroupMsg(userid, name, message)
     data.worldName = configuration:GetWorldName()
 
     local jsonData = jsonUtil.encode(data)
-    if(configuration:Available()) then
+    if (configuration:Available()) then
         GLOBAL.TheSim:QueryServer(configuration:GetPushUrl(), onSendResult, "POST", jsonData)
     else
-        if(confNotReadyAssertUnused) then
+        if (confNotReadyAssertUnused) then
             GLOBAL.TheNet:SystemMessage("未设置消息服务器")
             confNotReadyAssertUnused = false
         end
     end
 end
-
 
 ------ hook Networking_Say 来检查玩家说了啥 ------
 local function hookNetwork (inst)
@@ -270,32 +287,32 @@ name@料理的直播间: message
 
 
 ------ 拉取消息解析函数，可能会 error 所以套一层 pcall ------
-local rawOnGetGroupMsgResult = function (result, isSuccessful, resultCode)
+local rawOnGetGroupMsgResult = function(result, isSuccessful, resultCode)
     if isSuccessful and string.len(result) > 1 and resultCode == 200 then
         local datas = jsonUtil.decode(result)
         print(result)
         for _, data in ipairs(datas) do
-            local p = data.additionalPrefix and ("("..data.additionalPrefix..")") or ""
+            local p = data.additionalPrefix and ("(" .. data.additionalPrefix .. ")") or ""
             GLOBAL.TheNet:SystemMessage(
-                    p..data.name..
-                            "@"..data.worldName..
-                            ": "..data.text
+                    p .. data.name ..
+                            "@" .. data.worldName ..
+                            ": " .. data.text
             )
         end
 
     else
-        print("获取消息失败.\nisSuccess:", isSuccessful,"\nresultcode:", resultCode,"\nresult:",result)
+        print("获取消息失败.\nisSuccess:", isSuccessful, "\nresultcode:", resultCode, "\nresult:", result)
     end
 end
 
-local function onGetGroupMsgResult(result,isSuccessful,resultCode)
-    GLOBAL.pcall(rawOnGetGroupMsgResult, result,isSuccessful,resultCode)
+local function onGetGroupMsgResult(result, isSuccessful, resultCode)
+    GLOBAL.pcall(rawOnGetGroupMsgResult, result, isSuccessful, resultCode)
 end
-
 
 local no_config_err_delay = 10
 local task
-local pullLoop = function()  end
+local pullLoop = function()
+end
 ------ 获取消息循环 ------
 AddSimPostInit(function(inst)
     if GLOBAL.TheNet and GLOBAL.TheNet:GetIsServer() then
@@ -305,12 +322,12 @@ AddSimPostInit(function(inst)
                 return
             end
 
-            if(configuration:Available()) then
+            if (configuration:Available()) then
                 GLOBAL.TheSim:QueryServer(
                         configuration:GetPullUrl(),
                         function(result, isSuccessful, resultCode)
                             onGetGroupMsgResult(result, isSuccessful, resultCode)
-                            if(task == nil) then
+                            if (task == nil) then
                                 task = GLOBAL.TheWorld:DoPeriodicTask(
                                         TUNING.COM_NAALOH4_BRIDGE_PULL_DELAY or 1,
                                         pullLoop)
@@ -338,7 +355,7 @@ AddSimPostInit(function(inst)
 end)
 
 function clearTaskCache()
-    if(task)then
+    if (task) then
         task:Cancel()
         task = GLOBAL.TheWorld:DoPeriodicTask(
                 1,
