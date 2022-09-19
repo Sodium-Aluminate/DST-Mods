@@ -293,6 +293,9 @@ local rawOnGetGroupMsgResult = function(result, isSuccessful, resultCode)
         print(result)
         for _, data in ipairs(datas) do
             local p = data.additionalPrefix and ("(" .. data.additionalPrefix .. ")") or ""
+            if(data.isDanmaku) then
+                -- todo: 弹幕支持
+            end
             GLOBAL.TheNet:SystemMessage(
                     p .. data.name ..
                             "@" .. data.worldName ..

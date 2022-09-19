@@ -1,5 +1,6 @@
 package com.NaAlOH4.dst;
 
+import com.NaAlOH4.Danmaku;
 import com.NaAlOH4.Message;
 import com.NaAlOH4.MessageClient;
 import org.jetbrains.annotations.Nullable;
@@ -11,6 +12,8 @@ public class DSTMessage extends Message {
     private String text;
     private String name;
     private String additionalPrefix;
+
+    private boolean isDanmaku = false;
 
     private DontStarveTogetherMessageClient client;
     @Override
@@ -57,9 +60,12 @@ public class DSTMessage extends Message {
 
         if(message instanceof DSTMessage dstMessage){
             shadow.worldName = dstMessage.worldName;
+            shadow.isDanmaku = dstMessage.isDanmaku;
         }else {
             shadow.worldName = String.valueOf(message.getClientFrom());
+            shadow.isDanmaku = message instanceof Danmaku;
         }
+
         return shadow;
     }
 }

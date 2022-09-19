@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -22,6 +23,7 @@ public class DSTService {
 
     private int port;
     private String password;
+    private boolean noPasswd;
 
     private Consumer<MessageClient> onNewClient;
     private Consumer<MessageClient> onClientRevoke;
@@ -29,8 +31,23 @@ public class DSTService {
     public void init() {
         Gson gson = new Gson();
         if (port < 0 || port > 65536) throw new IllegalArgumentException("port not valid");
-        if (password.length() < 16) throw new IllegalArgumentException("password too short");
-
+        try {
+            MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
+            sha256.update(password.getBytes(StandardCharsets.UTF_8));
+            byte[] digest = sha256.digest();
+            StringBuilder stringBuilder = new StringBuilder();
+            for (byte b : digest) {
+                String hex = Integer.toHexString(0b11111111 & b);
+                if(hex.length() != 2)
+                    stringBuilder.append("0".repeat(2-hex.length()));
+                stringBuilder.append(hex);
+            }
+            String passwordSHA256 = stringBuilder.toString();
+            noPasswd = (passwordSHA256.equals("d977c17127ec9d2e0764be61b1d1b8a7c54ad30717fbc347212b642c0ba27d21"));// 聪明的小伙伴可能想暴力破解一下这个 sha256，不过其实直接改掉这里可能更方便点...
+            if (noPasswd) System.out.println("running as no password mode!");
+        } catch (Exception ignored) {}
+        if (password.length() < 16 && (!noPasswd))
+            throw new IllegalArgumentException("密码太短了！");
         try {
             HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
             server.createContext("/sendMessage", exchange -> {
@@ -38,7 +55,7 @@ public class DSTService {
                     if (!"POST".equals(exchange.getRequestMethod())) {
                         System.err.println("发现错误的请求：sendMessage 接口需要使用 post");
 
-                        responseExchange(exchange, 400, "sendMessage 接口需要使用 post。","text/plain; charset=utf-8");
+                        responseExchange(exchange, 400, "sendMessage 接口需要使用 post。", "text/plain; charset=utf-8");
                         return;
                     }
                     String inputPassword = null;
@@ -57,9 +74,9 @@ public class DSTService {
                             }
                         }
                     }
-                    if (!password.equals(inputPassword)) {
+                    if (noPasswd || !password.equals(inputPassword)) {
                         System.out.println("found a wrong password request: ");
-                        responseExchange(exchange, 401, "密码错误。","text/plain; charset=utf-8");
+                        responseExchange(exchange, 401, "密码错误。", "text/plain; charset=utf-8");
                         return;
                     }
 
@@ -69,12 +86,12 @@ public class DSTService {
                     if (message.isEmpty()) {
                         System.err.println("收到一个不完整的请求: ");
                         System.out.println(s);
-                        responseExchange(exchange, 400, "消息内容不完整。","text/plain; charset=utf-8");
+                        responseExchange(exchange, 400, "消息内容不完整。", "text/plain; charset=utf-8");
                         return;
                     }
                     if (!message.getWorldName().equals(worldName)) {
                         System.err.println("消息的世界名称与请求参数中不一致");
-                        responseExchange(exchange, 400, "消息的世界名称与请求参数中不一致。","text/plain; charset=utf-8");
+                        responseExchange(exchange, 400, "消息的世界名称与请求参数中不一致。", "text/plain; charset=utf-8");
                         return;
                     }
                     DontStarveTogetherMessageClient client = getMessageClient(message.getWorldName());
@@ -83,7 +100,7 @@ public class DSTService {
                     client.pushMessageToSend(message);
 
 
-                    responseExchange(exchange, 200, "消息发送成功: " + message,"text/plain; charset=utf-8");
+                    responseExchange(exchange, 200, "消息发送成功: " + message, "text/plain; charset=utf-8");
 
                     clearOldMessageClient();
                 } catch (RuntimeException e) {
@@ -95,7 +112,7 @@ public class DSTService {
                 try (exchange) {
                     if (!"GET".equals(exchange.getRequestMethod())) {
                         System.err.println("发现错误的请求：getMessage 接口需要使用 GET");
-                        responseExchange(exchange, 400, "getMessage 接口需要使用 GET。","text/plain; charset=utf-8");
+                        responseExchange(exchange, 400, "getMessage 接口需要使用 GET。", "text/plain; charset=utf-8");
                         return;
                     }
                     String inputPassword = null;
@@ -114,13 +131,13 @@ public class DSTService {
                             }
                         }
                     }
-                    if (!password.equals(inputPassword)) {
+                    if (noPasswd || !password.equals(inputPassword)) {
                         System.out.println("found a wrong password request.");
-                        responseExchange(exchange, 401, "密码错误。","text/plain; charset=utf-8");
+                        responseExchange(exchange, 401, "密码错误。", "text/plain; charset=utf-8");
                         return;
                     }
                     if (worldName == null || worldName.length() == 0) {
-                        responseExchange(exchange, 400, "世界名称不能为空","text/plain; charset=utf-8");
+                        responseExchange(exchange, 400, "世界名称不能为空", "text/plain; charset=utf-8");
                         return;
                     }
 

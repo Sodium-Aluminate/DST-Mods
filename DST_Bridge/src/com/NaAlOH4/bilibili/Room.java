@@ -1,10 +1,10 @@
 package com.NaAlOH4.bilibili;
 
-import com.NaAlOH4.Message;
+import com.NaAlOH4.Danmaku;
 import com.NaAlOH4.MessageClient;
 import org.jetbrains.annotations.Nullable;
 
-public class Room extends Message {
+public class Room extends Danmaku {
     private String text;
     private String nickname;
     private String timeline;

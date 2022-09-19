@@ -2,5 +2,6 @@
   "worldName": "worldName",
   "text": "message",
   "name": "name",
-  "additionalPrefix": "ku_xxx"
+  "additionalPrefix": "ku_xxx",
+  "isDanmaku": false
 }
