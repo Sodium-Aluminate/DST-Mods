@@ -314,11 +314,11 @@ end)
 ------ 拉取消息解析函数，可能会 error 所以套一层 pcall ------
 local rawOnGetGroupMsgResult = function(result, isSuccessful, resultCode)
     if isSuccessful and string.len(result) > 1 and resultCode == 200 then
-        local data = jsonUtil.decode(result)
+        local datas = jsonUtil.decode(result)
         print(result)
-        for _, data in ipairs(data) do
+        for _, data in ipairs(datas) do
             local p = data.additionalPrefix and ("(" .. data.additionalPrefix .. ")") or ""
-            if data.isDanmaku then
+            if (data.isDanmaku) then
                 SendModRPCToClient(GetClientModRPC(modname, DANMAKU_MESSAGE_RPC), nil, data.text)
             end
             GLOBAL.TheNet:SystemMessage(
