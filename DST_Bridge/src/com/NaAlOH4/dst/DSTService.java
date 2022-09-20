@@ -13,6 +13,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -184,14 +185,18 @@ public class DSTService {
         return client;
     }
 
+    private long lastOldClientCheckTime = 0;
     private void clearOldMessageClient() {
-        for (var set : clients.entrySet()) {
-            DontStarveTogetherMessageClient client = set.getValue();
+        long dt = System.currentTimeMillis()-lastOldClientCheckTime;
+        if(dt<5000 && dt >0)return; // 五秒内不重复检查
+        for (var iterator = clients.entrySet().iterator(); iterator.hasNext(); ) {
+            var client = iterator.next().getValue();
             if (client.tooOld()) {
-                clients.remove(set.getKey());
+                iterator.remove();
                 onClientRevoke.accept(client);
             }
         }
+        lastOldClientCheckTime = System.currentTimeMillis();
     }
 
     private void responseExchange(HttpExchange exchange, int code, String str, String contentType) throws IOException {
