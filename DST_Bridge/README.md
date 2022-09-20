@@ -12,6 +12,7 @@
 ```lua
 b_SetServerAddr("lobby.au.naaloh4.com")
 b_SetWorldName(TheNet:GetServerName()) -- 也可以换成你喜欢的房间名
+b_SetPasswd()
 ```
 然后就连接到测试大厅了（这个大厅没有和任何弹幕池连接，仅仅是不同客户端之间相互连接而已）
 
