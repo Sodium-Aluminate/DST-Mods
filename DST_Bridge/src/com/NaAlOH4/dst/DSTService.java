@@ -189,13 +189,15 @@ public class DSTService {
     private void clearOldMessageClient() {
         long dt = System.currentTimeMillis()-lastOldClientCheckTime;
         if(dt<5000 && dt >0)return; // 五秒内不重复检查
-        for (var iterator = clients.entrySet().iterator(); iterator.hasNext(); ) {
-            var client = iterator.next().getValue();
-            if (client.tooOld()) {
-                iterator.remove();
+
+        clients.entrySet().removeIf(entry->{
+            DontStarveTogetherMessageClient client = entry.getValue();
+            if(client.tooOld()){
                 onClientRevoke.accept(client);
+                return true;
             }
-        }
+            return false;
+        });
         lastOldClientCheckTime = System.currentTimeMillis();
     }
 

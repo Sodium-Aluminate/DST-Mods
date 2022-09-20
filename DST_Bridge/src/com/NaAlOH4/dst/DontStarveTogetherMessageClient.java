@@ -55,7 +55,7 @@ public class DontStarveTogetherMessageClient extends MessageClient {
     }
 
     public boolean tooOld() {
-        return (System.currentTimeMillis() - lastGetDate) > 30000L; //三十秒没有更新视为掉线
+        return (System.currentTimeMillis() - lastGetDate) > 10000L; //十秒没有更新视为掉线
     }
 
     @Override
