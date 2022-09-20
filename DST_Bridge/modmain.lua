@@ -294,16 +294,18 @@ AddClientModRPCHandler(modname, DANMAKU_MESSAGE_RPC, function(msg)
 
     local screen_w, screen_h = TheSim:GetScreenSize()
     local danmaku = Text(GLOBAL.CHATFONT_OUTLINE, 55, msg)
+    local danmakuShadow = Text(GLOBAL.CHATFONT_OUTLINE, 55, msg)
     local width, height = danmaku:GetRegionSize()
+    local dx = screen_w/500
     local min_x = -width
     local max_x = screen_w + width
     local max_y = screen_h - height
     local min_y = math.min(screen_h * 3 / 4, max_y)
     local y = math.random(min_y, max_y)
-    danmaku:SetPosition(min_x, y)
+    danmaku:SetPosition(max_x, y)
     danmaku.inst:DoPeriodicTask(0, function()
-        local x = danmaku.inst.UITransform:GetWorldPosition() + 15
-        if x > max_x then
+        local x = danmaku.inst.UITransform:GetWorldPosition() - dx
+        if x < min_x then
             danmaku:Kill()
         end
         danmaku:SetPosition(x, y)
