@@ -74,7 +74,7 @@ public class DSTService {
                             }
                         }
                     }
-                    if (noPasswd || !password.equals(inputPassword)) {
+                    if ((!noPasswd) && !password.equals(inputPassword)) {
                         System.out.println("found a wrong password request: ");
                         responseExchange(exchange, 401, "密码错误。", "text/plain; charset=utf-8");
                         return;
@@ -131,7 +131,7 @@ public class DSTService {
                             }
                         }
                     }
-                    if (noPasswd || !password.equals(inputPassword)) {
+                    if ((!noPasswd) && !password.equals(inputPassword)) {
                         System.out.println("found a wrong password request.");
                         responseExchange(exchange, 401, "密码错误。", "text/plain; charset=utf-8");
                         return;
