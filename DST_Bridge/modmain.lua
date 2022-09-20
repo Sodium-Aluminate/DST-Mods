@@ -284,17 +284,42 @@ name@料理的直播间: message
 ]]
 ------------------------------------------------
 
+local Text = require("widgets/text")
 
+local DANMAKU_MESSAGE_RPC = "Danmaku"
+AddClientModRPCHandler(modname, DANMAKU_MESSAGE_RPC, function(msg)
+    if not GLOBAL.ThePlayer then
+        return
+    end
+
+    local screen_w, screen_h = TheSim:GetScreenSize()
+    local danmaku = Text(GLOBAL.CHATFONT_OUTLINE, 55, msg)
+    local width, height = danmaku:GetRegionSize()
+    local min_x = -width
+    local max_x = screen_w + width
+    local max_y = screen_h - height
+    local min_y = math.min(screen_h * 3 / 4, max_y)
+    local y = math.random(min_y, max_y)
+    danmaku:SetPosition(min_x, y)
+    danmaku.inst:DoPeriodicTask(0, function()
+        local x = danmaku.inst.UITransform:GetWorldPosition() + 15
+        if x > max_x then
+            danmaku:Kill()
+        end
+        danmaku:SetPosition(x, y)
+    end)
+    GLOBAL.ThePlayer.HUD:AddChild(danmaku)
+end)
 
 ------ 拉取消息解析函数，可能会 error 所以套一层 pcall ------
 local rawOnGetGroupMsgResult = function(result, isSuccessful, resultCode)
     if isSuccessful and string.len(result) > 1 and resultCode == 200 then
-        local datas = jsonUtil.decode(result)
+        local data = jsonUtil.decode(result)
         print(result)
-        for _, data in ipairs(datas) do
+        for _, data in ipairs(data) do
             local p = data.additionalPrefix and ("(" .. data.additionalPrefix .. ")") or ""
-            if(data.isDanmaku) then
-                -- todo: 弹幕支持
+            if data.isDanmaku then
+                SendModRPCToClient(GetClientModRPC(modname, DANMAKU_MESSAGE_RPC), nil, data.text)
             end
             GLOBAL.TheNet:SystemMessage(
                     p .. data.name ..
