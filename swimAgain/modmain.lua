@@ -1,7 +1,12 @@
-print("这个 mod 还在测试阶段，可能会炸。")
 
 setmetatable = GLOBAL.setmetatable
 assert = GLOBAL.assert
+rawget = GLOBAL.rawget
+
+L = require("log")
+L:setDataDumper(GLOBAL.DataDumper)
+L:loadEnv(env)
+L = nil
 
 TUNING.COM_NAALOH4_ALLOW_SWIM = (GetModConfigData("allowSwim") == 1) -- 1: can swim; 0: can't swim.
 
@@ -10,7 +15,7 @@ local DISABLE_CHECK = "DISABLE_CHECK"
 local CHECK_BUSY = "CHECK_BUSY"
 local STRICT = "STRICT"
 
-local BUSY_TAGS = {"busy","drowning"} -- 其实带溺水标签的都带繁忙，但是谁知道科雷以后怎么写呢
+local BUSY_TAGS = { "busy", "drowning" } -- 其实带溺水标签的都带繁忙，但是谁知道科雷以后怎么写呢
 local STRICT_SG_TAGS = { "idle", "moving", "running" }
 
 local function checkSG(sg, tags)
@@ -43,75 +48,112 @@ local rawTableKey = "com.NaAlOH4.tableValueOverride.rawTable"
 local hookingPathKey = "com.NaAlOH4.tableValueOverride.hookingPath"
 local targetValueKey = "com.NaAlOH4.tableValueOverride.targetValue"
 local function tableValueOverride(rawTable, path, targetValue)
-    local hookingPath = type(path) == "string" and { path } or path
+    log("=========tableValueOverride=========")
+    log("path: ")
+    log(path)
+    local hookingPath = type(path) == "string" and { path } or path or {}
+    log("set hooking patch: ")
+    log(hookingPath)
+    --[[
+    path        result
+    "aaa"       {"aaa"}
+    {"a","b"}   {"a","b"}
+    nil         {}
+    ]]
 
     local metatable = {
-        [rawTableKey] = rawTable,
-        [hookingPathKey] = hookingPath,
-        [targetValueKey] = targetValue,
     }
     function metatable:__index(key)
 
-        local currentRawTable = self[rawTableKey]
-        local currentHookingPath = self[hookingPathKey]
-        local currentTargetValue = self[targetValueKey]
-        if (#currentHookingPath == 0) then
-            return currentRawTable[key]
+
+        log("getting key: ")
+        log(key)
+        log("self: ")
+        log(self, true)
+        log("target keys: ")
+        log(hookingPath)
+
+        if (#hookingPath == 0) then
+            log("find empty hook patch. returning: ")
+            log(rawTable[key], true)
+            return rawTable[key]
         end
-        if (currentHookingPath[1] == key) then
-            if (#currentHookingPath == 1) then
-                return currentTargetValue
+        if (hookingPath[1] == key) then
+            log("find key match.")
+            if (#hookingPath == 1) then
+                log("return value: ")
+                log(targetValue)
+                return targetValue
             else
+                log("create new hook list:")
                 local shadow = {}
-                for i, v in ipairs(currentRawTable) do
+                for i, v in ipairs(hookingPath) do
                     if (i > 1) then
                         shadow[i - 1] = v
                     end
                 end
-                return tableValueOverride(currentRawTable[key], shadow, currentTargetValue)
+                log(shadow)
+                return tableValueOverride(rawTable[key], shadow, targetValue)
             end
         end
-        return currentRawTable[key]
+        log("key not match. returning: ")
+        log(rawTable[key], true)
+        return rawTable[key]
     end
 
     function metatable:__newindex(key, value)
-        self[rawTableKey][key] = value
+        rawget(self, rawTableKey)[key] = value
     end
 
+    local toReturn = GLOBAL.setmetatable({}, metatable)
     return toReturn;
 end
 
 AddComponentPostInit("builder", function(Builder, instEntitiy)
     local oldMakeRecipeFn = Builder.MakeRecipe
 
+    log("hooking MakeRecipe fn")
     function Builder.MakeRecipe(Builder, recipe, pt, rot, skin, onsuccess)
+        log("hooked MakeRecipe fn")
         if (TUNING.COM_NAALOH4_CRAFT_CONDITION == NOT_HOOK) then
+            log("config=NOT_HOOK, use original fn")
             return oldMakeRecipeFn(Builder, recipe, pt, rot, skin, onsuccess)
         end
         if (TUNING.COM_NAALOH4_CRAFT_CONDITION == DISABLE_CHECK) then
+            log("config=DISABLE_CHECK, start hooking HasStateTag fn")
             local old_HasStateTag_fn = Builder.inst.sg.HasStateTag
-            local HookedBuilder = tableValueOverride(Builder, { "inst", "sg", "HasStateTag", function(sg, tagName)
+            local HookedBuilder = tableValueOverride(Builder, { "inst", "sg", "HasStateTag"}, function(sg, tagName)
                 if (tagName == "drowning") then
-                    return not TUNING.COM_NAALOH4_ALLOW_SWIM;
+                    if (TUNING.COM_NAALOH4_ALLOW_SWIM) then
+                        log("假装没淹死...")
+                        return false
+                    end
                 end
                 if (tagName == "busy") then
                     -- 根据注释未来可能改为繁忙检测
                     return false
                 end
                 return old_HasStateTag_fn(sg, tagName)
-            end })
+            end )
+            log("using original fn with hooked argument.")
             return oldMakeRecipeFn(HookedBuilder, recipe, pt, rot, skin, onsuccess)
         end
         if (TUNING.COM_NAALOH4_CRAFT_CONDITION == CHECK_BUSY) then
+            log("config=CHECK_BUSY, check player if busy")
             if (checkSG(Builder.inst.sg, BUSY_TAGS)) then
+                log("found player busy, skip this craft.")
                 return false
             end
+            log("player not busy, use original fn to craft.")
             return oldMakeRecipeFn(Builder, recipe, pt, rot, skin, onsuccess)
         end
         if (TUNING.COM_NAALOH4_CRAFT_CONDITION == STRICT) then
+            log("config=STRICT, check player if idle or walk")
             if (checkSG(Builder.inst.sg, STRICT_SG_TAGS)) then
+                log("check passed, use original fn to craft")
                 return oldMakeRecipeFn(Builder, recipe, pt, rot, skin, onsuccess)
             end
+            log("check failed, skip this craft")
             return false
         end
     end

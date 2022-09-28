@@ -4,6 +4,12 @@ TUNING.COM_NAALOH4_ALLOW_BOAT_MOVE_ON_GROUND = (GetModConfigData("allowBoatMoveO
 TUNING.COM_NAALOH4_ALLOW_STAGEHAND_BOAT_FLY = (GetModConfigData("allowStagehandBoatFly") == 1)
 assert = GLOBAL.assert
 
+
+L = require("log")
+L:setDataDumper(GLOBAL.DataDumper)
+L:loadEnv(env)
+L = nil
+
 AddStategraphPostInit("boat", function(inst_sg)
     local oldPlaceFn = inst_sg.states.place.events.animover.fn
     local oldIdleFn = inst_sg.states.idle.events.death.fn
@@ -29,7 +35,9 @@ AddComponentPostInit("boatphysics", function(inst_component)
     local oldFn = inst_component.SetHalting
     inst_component.SetHalting = function(inst, shouldHalt)
         if (shouldHalt and TUNING.COM_NAALOH4_ALLOW_BOAT_MOVE_ON_GROUND) then
-            print("游戏尝试搁浅一艘船，被咕了。")
+            if (TUNING.COM_NAALOH4_DEBUG) then
+                log("游戏尝试搁浅一艘船，被咕了。")
+            end
         else
             oldFn(inst, shouldHalt)
         end

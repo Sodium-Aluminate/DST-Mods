@@ -6,7 +6,7 @@ description = [[
 你可以通过修改服务端 TUNING.COM_NAALOH4_ALLOW_SWIM 和 TUNING.COM_NAALOH4_CRAFT_CONDITION 的值来临时性测试其他的配置。
 ]]
 author = "NaAlOH4"
-version = "1.0"
+version = "1.0.1"
 forumthread = ""
 api_version = 10
 
