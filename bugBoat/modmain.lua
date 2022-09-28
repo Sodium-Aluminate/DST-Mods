@@ -1,4 +1,3 @@
-TUNING = GLOBAL.TUNING
 TUNING.COM_NAALOH4_ALLOW_BUG_BOAT = (GetModConfigData("allowBugBoat") == 1)
 TUNING.COM_NAALOH4_KEEP_BUG_BOAT = (GetModConfigData("keepBugBoat") == 1)
 TUNING.COM_NAALOH4_ALLOW_BOAT_MOVE_ON_GROUND = (GetModConfigData("allowBoatMoveOnGround") == 1)
