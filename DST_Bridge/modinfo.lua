@@ -11,5 +11,5 @@ api_version = 10
 dont_starve_compatible = false
 reign_of_giants_compatible = false
 dst_compatible = true
-all_clients_require_mod = true
+all_clients_require_mod = false
 client_only_mod = false
