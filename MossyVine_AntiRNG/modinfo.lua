@@ -15,7 +15,7 @@ description = mdescription[applied_lang]
 
 
 author = "t.me/NaAlOH4"
-version = "1.0"
+version = "1.1"
 
 api_version = 10
 priority = 100
