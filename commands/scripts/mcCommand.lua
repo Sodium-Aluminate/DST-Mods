@@ -30,6 +30,9 @@ local function split(str, pattern, limit, allowEmpty)
     end
     return l
 end
+local function isEmptyArg(arg)
+    return arg == nil or arg == "" or arg:find("^ +$")
+end
 
 local function genEnv()
     local env = {
@@ -945,246 +948,170 @@ local function _name2player(name)
     end
 end
 
-local functions = {
-    --[[
+local _timeLength = { s = 1, h = TUNING.SEG_TIME, d = TUNING.TOTAL_DAY_TIME, y = (15 + 20 + 15 + 20) * 30 * 16 }
+if (TUNING.AUTUMN_LENGTH and TUNING.WINTER_LENGTH and TUNING.SPRING_LENGTH and TUNING.SUMMER_LENGTH) then
+    _timeLength.y = TUNING.AUTUMN_LENGTH + TUNING.WINTER_LENGTH + TUNING.SPRING_LENGTH + TUNING.SUMMER_LENGTH
+end
+local _dayPhase = { "day", "dusk", "night" }
+local _seasonPhase = { "spring", "summer", "autumn", "winter" }
+for _, p in ipairs({ _dayPhase, _seasonPhase }) do
+    for i, v in ipairs(p) do
+        _seasonPhase[v] = i
+    end
+    for i, _ in ipairs(p) do
+        _seasonPhase[i] = nil
+    end
+end
+
+local FUNCTION_USAGE = {
+    zh = {
+        tp = [[tp
+
+Usage:
     tp
-        抄袭自 mc。
+    tp <target>
+    tp <source> <target>
 
-        传送自己：
-            tp <pos> 由两个数字或三个数字组成的坐标
-            tp <player name> 传送到某玩家（名字）
-            tp <entity> 将自己传送到指定实体
+<source>
+    被传送的目标，可以是玩家名字（以下划线替换空格）、实体选择器、也可以留空表示传送自己。
 
-        传送其他玩家：
-            tp <player> <pos> 将玩家传送到指定坐标
-            tp <player1> <player2> 将玩家1传送到玩家2
-            tp <player> <entity> 将玩家传送到指定实体
+<target>
+    目标位置，可以是 x,z、x,y,z 或者玩家名字、返回一个实体的实体选择器、也可以留空表示传送到鼠标位置。
+]],
+        summon = [[summon
 
-        传送一群实体：
-            tp <entities> <pos> 将多个实体传送到指定坐标
-            tp <entities> <player> 将多个实体传送到指定玩家
-            tp <entities> <entity> 将多个实体传送到指定实体
-    ]]
+Usage:
+    summon <prefab> [<count>] (at|offset) [<pos>] [<nbt>]
+    summon <prefab> <pos> [<nbt>]
+]],
+        seed = [[seed
+
+Usage:
+    seed
+]],
+        time = [[time
+
+Usage:
+    time
+    time query 等同于 time
+    time (set|add) <days>
+    time (set|add) [<years>y][<days>d][<hours>h][<seconds>s]
+    time set (day|dusk|night)
+    time set (spring|summer|autumn|winter)
+
+]],
+    }
+}
+
+local functions = {
     tp = function(argStr, guid, x, z, modenv)
-        local args, format = argReader(argStr, {
-            ARGS.numbers,
-            ARGS.string,
-            ARGS.entities,
-
-            ARGS.str_nums,
-            ARGS.two_string,
-            ARGS.str_ent,
-
-            ARGS.ent_num,
-            ARGS.ent_str,
-            ARGS.two_ent
-        })
-
-        -- 超长switch...我应该用table的...但是我懒得重构。
-        -- tp <pos>
-        if (format == ARGS.numbers) then
-            local player = Ents[guid] or (#AllPlayers == 1 and AllPlayers[1] or nil) -- 如果世界上只有一个玩家，则可以通过服务器控制台传送
-            if (not player) then
-                print("using tp <pos> but \"current player\" not found")
-                return
+        local a = {}
+        local arg = argStr
+        local argFormats = { ARGS.numbers, ARGS.string, ARGS.entities }
+        while (true) do
+            local l = #a
+            for _, argFormat in ipairs(argFormats) do
+                local results, newStr = _testFormat(arg, argFormat)
+                if (results) then
+                    table.insert(a, { format = argFormat, result = results[1] })
+                    arg = newStr
+                end
             end
-
-            local numbers = args[1]
-            if (#numbers > 3) then
-                print("using tp <pos> but too many numbers")
-                return
-            elseif (#numbers < 2) then
-                print("using tp <pos> but not enough numbers")
-                return
-            elseif (#numbers == 2) then
-                -- x, z -> x, y=0, z
-                numbers[3] = numbers[2]
-                numbers[2] = 0
-            end
-
-            player.Transform:SetPosition(numbers[1], numbers[2], numbers[3])
-
-
-            -- tp <player name>
-        elseif (format == ARGS.string) then
-            local player = Ents[guid] or (#AllPlayers == 1 and AllPlayers[1] or nil)
-            if (not player) then
-                print("using tp <player> but \"current player\" not found")
-                return
-            end
-
-            local targetPlayer = _name2player(args[1])
-            if (not targetPlayer) then
-                print("using tp <player> but \"target player\" not found")
-                return
-            end
-
-            player.Transform:SetPosition(targetPlayer.Transform:GetWorldPosition())
-
-            -- tp <entity>
-        elseif (format == ARGS.entities) then
-            local player = Ents[guid] or (#AllPlayers == 1 and AllPlayers[1] or nil)
-            if (not player) then
-                print("using tp <entity> but \"current player\" not found")
-                return
-            end
-
-            local entities = args[1]
-            if (#entities == 0) then
-                print("using tp <entity> but entity not found")
-                return
-            elseif (#entities > 1) then
-                print("using tp <entity> but nore than 1 entities found")
-                return
-            end
-            local entity = entities[1]
-            player.Transform:SetPosition(entity.Transform:GetWorldPosition())
-
-
-
-            -- tp <player> <pos>
-        elseif (format == ARGS.str_nums) then
-            local targetPlayer = _name2player(args[1])
-            if (not targetPlayer) then
-                print("using tp <player> <pos> but \"target player\" not found")
-                return
-            end
-
-            local numbers = args[2]
-            if (#numbers > 3) then
-                print("using tp <player> <pos> but too many numbers")
-                return
-            elseif (#numbers < 2) then
-                print("using tp <player> <pos> but not enough numbers")
-                return
-            elseif (#numbers == 2) then
-                numbers[3] = numbers[2]
-                numbers[2] = 0
-            end
-
-            targetPlayer.Transform:SetPosition(numbers[1], numbers[2], numbers[3])
-
-
-            -- tp <player1> <player2>
-        elseif (format == ARGS.two_string) then
-            local targetPlayer1 = _name2player(args[1])
-            if (not targetPlayer1) then
-                print("using tp <player1> <player2> but player 1 not found")
-                return
-            end
-
-            local targetPlayer2 = _name2player(args[2])
-            if (not targetPlayer2) then
-                print("using tp <player1> <player2> but player 2 not found")
-                return
-            end
-
-            player1.Transform:SetPosition(player2.Transform:GetWorldPosition())
-
-
-            -- tp <player> <entity>
-        elseif (format == ARGS.str_ent) then
-            local name = args[1]
-            local targetPlayer = _name2player(args[1])
-            if (not targetPlayer) then
-                print("using tp <player> <entity> but \"target player\" not found")
-                return
-            end
-
-            local entities = args[2]
-            if (#entities == 0) then
-                print("using tp <player> <entity> but entity not found")
-                return
-            elseif (#entities > 1) then
-                print("using tp <player> <entity> but nore than 1 entities found")
-                return
-            end
-            local entity = entities[1]
-
-            targetPlayer.Transform:SetPosition(entity.Transform:GetWorldPosition())
-
-
-
-            -- tp <entities> <pos>
-        elseif (format == ARGS.ent_nums) then
-            local movingEntities = args[1]
-            if (#movingEntities == 0) then
-                print("using tp <entities> <player2> but entities(arg1) not found")
-                return
-            end
-
-            local numbers = args[2]
-            if (#numbers > 3) then
-                print("using tp <player> <pos> but too many numbers")
-            elseif (#numbers < 2) then
-                print("using tp <player> <pos> but not enough numbers")
-            elseif (#numbers == 2) then
-                numbers[3] = numbers[2]
-                numbers[2] = 0
-            end
-
-            for _, v in ipairs(movingEntities) do
-                v.Transform:SetPosition(numbers[1], numbers[2], numbers[3])
-            end
-
-
-            -- tp <entities> <player2>
-        elseif (format == ARGS.ent_str) then
-
-            local movingEntities = args[1]
-            if (#movingEntities == 0) then
-                print("using tp <entities> <player2> but entities(arg1) not found")
-                return
-            end
-
-            local targetPlayer = _name2player(args[2])
-            if (not targetPlayer) then
-                print("using tp <entities> <player2> but player 2 not found")
-                return
-            end
-
-            for _, v in ipairs(movingEntities) do
-                v.Transform:SetPosition(targetPlayer.Transform:GetWorldPosition())
-            end
-
-
-            -- tp <entities> <entity>
-        elseif (format == ARGS.two_ent) then
-
-            local movingEntities = args[1]
-            if (#movingEntities == 0) then
-                print("using tp <entities> <entity> but entities(arg1) not found")
-                return
-            end
-
-            local _entities = args[2]
-            if (#_entities == 0) then
-                print("using tp <entities> <entity> but entity(arg2) not found")
-                return
-            elseif (#_entities > 1) then
-                print("using tp <entities> <entity> but more than 1 entities(arg2) found")
-                return
-            end
-            local entity = _entities[1]
-
-            for _, v in ipairs(movingEntities) do
-                v.Transform:SetPosition(entity.Transform:GetWorldPosition())
+            if (l == #a) then
+                if (isEmptyArg(arg)) then
+                    break
+                else
+                    print("can't parse command: " .. arg)
+                    return
+                end
             end
         end
 
+        -- format a:?
+        if (not a[2]) then
+            a[2] = a[1]
+            a[1] = nil
+        end
+        if (not a[1]) then
+            local player = Ents[guid] or (#AllPlayers == 1 and AllPlayers[1] or nil)
+            if (not player) then
+                print("using tp without <source> argument, but \"current player\" not found")
+                return
+            end
+            a[1] = { format = ARGS.entities, result = { player } }
+        end
+        if (not a[2]) then
+            if (x and z and (x ~= 0 or z ~= 0)) then
+                a[2] = { format = ARGS.numbers, result = { x, 0, z } }
+            else
+                print("using tp without <target> argument, but \"mouse pos\" not working")
+                return
+            end
+        end
 
+        -- format a: {{?},{?}} (str/ent/nums) (result key ignored)
+
+        -- name2player
+        for i, v in pairs(a) do
+            if (v.format == ARGS.string) then
+                local player = _name2player(v.result)
+                if (not player) then
+                    print("using tp but player \"" .. v.result .. "\" not found")
+                    return
+                end
+                a[i] = { format = ARGS.entities, result = { player } }
+            end
+        end
+
+        -- format a: {{?},{?}} (ent/nums)
+
+
+        if (a[1].format == ARGS.numbers) then
+            print("using tp but <source> argument is numbers")
+            return
+        end
+
+        -- format a: {{ent},{?}} (ent/nums)
+
+        if (a[2].format ~= ARGS.numbers) then
+            assert(a[2].format == ARGS.entities, "代码写错了？")
+            local ents = a[2].result
+            if (#ents ~= 1) then
+                print('using tp but "' .. #ents .. '" <target> found')
+                return
+            end
+            if (not ents[1].Transform) then
+                print("没有 Transform 的实体?")
+                return
+            end
+            local x, y, z = ents[1].Transform:GetWorldPosition()
+            a[2] = { format = ARGS.numbers, result = { x, y, z } }
+        end
+
+        -- format a: {{ent},{nums}}
+
+        if (#a[2].result == 2) then
+            table.insert(a, 2, 0)
+        end
+
+        if (#a[2].result ~= 3) then
+            print('using tp but <target> have ' .. #a[2].result .. 'numbers."')
+            return
+        end
+
+        -- format a: {{ent},{x,y,z}}
+
+        local p = a[2].result
+        for i, ent in pairs(a[1].result) do
+            if (ent.Transform) then
+                ent.Transform:SetPosition(p.x, p.y, p.z)
+            else
+                print("found entity without Transform: ")
+                print(ent)
+            end
+        end
     end,
 
-    --[[
-    summon
-        抄袭自mc
-            summon <prefab> <参数...>
-        参数可以为：
-            at <pos> （如果没有与 count 参数相邻，则 at 可以省略）
-            offset <relative pos>
-            <count>
-            <nbt>
-    ]]
     summon = function(argStr, guid, input_x, input_z, modenv)
         local arg = argStr
         local prefab
@@ -1201,6 +1128,7 @@ local functions = {
 
         while (true) do
             local result, newStr = nil, nil
+            -- offset x,y,z 相对坐标
             result, newStr = _testFormat(arg, ARGS.str_nums)
             if (result) then
                 local dx, dy, dz = 0, 0, 0
@@ -1235,6 +1163,7 @@ local functions = {
                 arg = newStr
             end
 
+            -- 绝对坐标
             result, newStr = nil, nil
             result, newStr = _testFormat(arg, ARGS.numbers)
             if (result) then
@@ -1257,6 +1186,7 @@ local functions = {
                 arg = newStr
             end
 
+            -- 数量
             result, newStr = nil, nil
             result, newStr = _testFormat(arg, ARGS.number)
             if (result) then
@@ -1265,6 +1195,7 @@ local functions = {
                 arg = newStr
             end
 
+            -- nbt
             result, newStr = nil, nil
             result, newStr = _testFormat(arg, ARGS.nbt)
             if (result) then
@@ -1272,7 +1203,7 @@ local functions = {
                 arg = newStr
             end
 
-            if (arg == "") then
+            if (arg == "" or arg == " ") then
                 break
             end
 
@@ -1297,33 +1228,96 @@ local functions = {
 
     end,
 
-
     seed = function(argStr, guid, input_x, input_z, modenv)
         TheNet:SystemMessage('当前世界种子："' .. TheWorld.meta.seed .. '"')
     end,
 
     time = function(argStr, guid, input_x, input_z, modenv)
-        if (argStr == "" or argStr:find("^ +$") or argStr:find("^ *query *$")) then
-            if (math.random() < 0.1) then
-                TheNet:SystemMessage('为什么不直接看右上角？' .. TheWorld.state.cycles + TheWorld.state.time .. '')
-            else
-                TheNet:SystemMessage('当前世界时间："' .. TheWorld.state.cycles + TheWorld.state.time .. '"')
+
+        local results, newStr = _testFormat(argStr, ARGS.string)
+        if (isEmptyArg(argStr) or results[1] == "query") then
+            local day = TheWorld.state.cycles + math.floor(TheWorld.state.time * 100) / 100
+            local seconds = math.floor(TheWorld.state.time * _timeLength.d * 100) / 100
+            TheNet:SystemMessage("current time: " .. day .. " days(" .. TheWorld.state.cycles .. " day and " .. seconds .. " seconds)")
+
+            -- 乐
+            if (math.random() < 0.01) then
+                TheNet:SystemMessage('为什么不直接看右上角？')
             end
-            print(TheWorld.state.cycles + TheWorld.state.time)
+
+            print("cycles&time: ")
+            print(TheWorld.state.cycles, TheWorld.state.time)
             return
         end
-        local args, format = argReader(argStr, { ARGS.str_num , ARGS.two_string})
-        if(args[1]=="set")then
-            if(format==ARGS.str_num)then
-                if(args[2]<=TheWorld.state.cycles + TheWorld.state.time)then
-                    TheNet:SystemMessage('无法时间倒流... 当前世界时间："' .. TheWorld.state.cycles + TheWorld.state.time .. '"')
-                else
-                    LongUpdate(TUNING.TOTAL_DAY_TIME * (args[2] - (TheWorld.state.cycles + TheWorld.state.time)))
-                end
-            else
 
+        local timeStr = newStr:gsub(" ", ""):lower()
+        if (results[1] == "set") then
+            --[[
+        --    time set <seconds>
+        --    time set [<days>d][<hours>h][<seconds>s]
+        ]]
+            if (_dayPhase[timeStr]) then
+                if (not TheWorld and TheWorld.state) then
+                    print("world state error(not ready?)")
+                    return
+                end
+                for phase, i in pairs(_dayPhase) do
+                    if (TheWorld.state["is" .. phase]) then
+                        local deltaPhases = _dayPhase[timeStr] - i
+                        while (deltaPhases < 0) do
+                            deltaPhases = deltaPhases + #_dayPhase
+                        end
+                        for i = 1, deltaPhases do
+                            TheWorld:PushEvent("ms_nextphase")
+                        end
+                        return
+                    end
+                end
+            end
+            if (_seasonPhase[timeStr]) then
+                if (not TheWorld) then
+                    print("world error(not ready?)")
+                    return
+                end
+                TheWorld:PushEvent("ms_setseason", timeStr)
+                return
             end
         end
+        if (results[1] == "set" or results[1] == "add") then
+            local seconds
+            local d = tonumber(timeStr)
+            if (d) then
+                if (results[1] == "set") then
+                    d = d - (TheWorld.state.cycles + TheWorld.state.time)
+                end
+                seconds = d * _timeLength.d
+            else
+                seconds = (results[1] == "set") and (_timeLength.d * (0 - (TheWorld.state.cycles + TheWorld.state.time))) or 0
+                local _timeStr = timeStr
+                while (true) do
+                    local s, e, n, u = _timeStr:find("([+-]?[0-9%.]+)([ydhs])")
+                    n = tonumber(n)
+                    if (s ~= 1 or (not n)) then
+                        print("unable to parse " .. timeStr)
+                        return
+                    end
+                    _timeStr = _timeStr:sub(e + 1)
+                    seconds = seconds + (n * _timeLength[u])
+                    if (_timeStr == "") then
+                        break
+                    end
+                end
+            end
+
+            if (seconds < 0) then
+                TheNet:SystemMessage("无法时间倒流...")
+                return
+            else
+                LongUpdate(seconds)
+                return
+            end
+        end
+
     end
 }
 

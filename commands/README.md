@@ -22,4 +22,12 @@
 
 以 `/` 开头的内容被视为类似 Minecraft 的命令。
 
-mod 未完成，目前只完成了 tp 和 summon。
+mod 未完成，目前只完成了：
+
+ * tp
+
+ * summon
+
+ * time
+
+ * seed
