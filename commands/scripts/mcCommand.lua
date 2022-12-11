@@ -998,7 +998,15 @@ Usage:
     time (set|add) [<years>y][<days>d][<hours>h][<seconds>s]
     time set (day|dusk|night)
     time set (spring|summer|autumn|winter)
+]],
+        tp = [[kill
 
+Usage:
+    kill
+    kill <target>
+
+<target>
+    被杀死的目标，可以是玩家名字（以下划线替换空格）、实体选择器、也可以留空表示自杀。
 ]],
     }
 }
@@ -1318,7 +1326,88 @@ local functions = {
             end
         end
 
-    end
+    end,
+
+
+    kill = function(argStr, guid, x, z, modenv)
+
+        local restArg
+        local targets
+        if(isEmptyArg(argStr))then
+            local player = Ents[guid] or (#AllPlayers == 1 and AllPlayers[1] or nil)
+            if (not player) then
+                print("using kill without argument, but \"current player\" not found")
+                return
+            end
+            targets = {player}--todo
+        end
+
+        if (not targets)then
+            local results, newStr = _testFormat(argStr, ARGS.string)
+            if (results) then
+                restArg = newStr
+                local player = _name2player(results[1])
+                if (not player) then
+                    print("player \"" .. results[1] .. "\" not found")
+                    return
+                end
+                targets = { player }
+            end
+        end
+
+        if(not targets)then
+            local results, newStr = _testFormat(argStr, ARGS.entities)
+            if (results) then
+                restArg = newStr
+                if (#results[1] == 0) then
+                    print("no entity found")
+                    return
+                end
+                targets = results[1]
+            end
+        end
+
+
+
+        local force = false
+        if (restArg:gsub(" ", ""):lower() == "fuck") then
+            restArg = ""
+            force = true
+        end
+        if (not isEmptyArg(restArg) or (not targets)) then
+            print("unknown args: ")
+            print(argStr)
+        end
+        -- 别手欠执行了 /kill @e
+        if (#targets > 100 and (not force)) then
+            TheNet:SystemMessage('too many ents to kill! if you really want execute it, append " fuck" for command to force it.')
+            return
+        end
+
+        for _, ent in pairs(targets) do
+            -- DestroyEntity
+            if ent and ent.IsValid and ent:IsValid() then
+                if(ent==TheWorld)then
+                    if(force)then
+                        TheNet:SystemMessage("oh, look~ \"TheWorld\" ent will be deleted now~")
+                        ent:Remove()
+                    else
+                        TheNet:SystemMessage("trying to delete \"TheWorld\" ent, skipped")
+                    end
+                else
+                    local health = ent.components and ent.components.health
+                    if health ~= nil then
+                        if not health:IsDead() then
+                            health:Kill()
+                        end
+                    else
+                        ent:Remove()
+                    end
+                end
+            end
+        end
+    end,
+
 }
 
 return {

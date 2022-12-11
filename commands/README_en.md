@@ -21,11 +21,8 @@ command that start with `: ` will be regard as "server announce"
 command that start with `/` will be executed as a Minecraft command.
 
 unfinished, only these command support yet:
-
 * tp
-
 * summon
-
 * time
-
 * seed
+* kill
