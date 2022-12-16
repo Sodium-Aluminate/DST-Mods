@@ -1,3 +1,10 @@
+local IGNORE_WALKABLE_PLATFORM_TAGS_ON_REMOVE = { "ignorewalkableplatforms", "ignorewalkableplatformdrowning", "activeprojectile", "flying", "FX", "DECOR", "INLIMBO", "player" }
+
+local function startsWith(scr, target)
+    assert(type(scr) == "string" and type(target) == "string")
+    return scr:sub(1, #target) == target
+end
+
 local function _insertStr(t, str, allowEmpty)
     if (allowEmpty or (str and #str > 0)) then
         table.insert(t, str)
@@ -33,7 +40,14 @@ end
 local function isEmptyArg(arg)
     return arg == nil or arg == "" or arg:find("^ +$")
 end
+local function getCurrentPlayer(guid)
+    return guid and Ents[guid] or (#AllPlayers == 1 and AllPlayers[1] or nil)
+end
 
+-- todo 使用 metatable 替换掉当前策略
+-- todo 使用 metatable 将 prefab=flower 中未赋值的 flower 变成 "flower" 字符串
+---genEnv
+---@return table 一个类似科雷 modmain 的 env
 local function genEnv()
     local env = {
         -- lua
@@ -74,6 +88,9 @@ local function genEnv()
     return env
 end
 local _env = genEnv()
+
+---clearEnv 将环境清空
+---@param env table 运行代码后的env
 local function clearEnv(env)
     for k, _ in pairs(_env) do
         env[k] = nil
@@ -176,7 +193,8 @@ end
 ---     函数返回：另一个判断实体是否满足要求的函数：
 ---         函数传参：实体
 ---         函数返回：该实体是否满足要求
-local filterOverrides = {
+local filterOverrides
+filterOverrides = {
     --- 实体prefab是否满足正则
     type = function(regex)
         return function(ent)
@@ -268,9 +286,9 @@ local filterOverrides = {
         end
     end
 }
-filterOverrides.san = filterOverrides.sanity
-filterOverrides.use = filterOverrides.finiteuses
-filterOverrides.rot = filterOverrides.perishable
+for alias, raw in pairs({ san = "sanity", use = "finiteuses", rot = "perishable" }) do
+    filterOverrides[alias] = filterOverrides[raw]
+end
 
 local NBTOverrides = {
     hp = function(arg)
@@ -646,7 +664,6 @@ type：字符串，正则表达式，目标prefab名字必须匹配表达式。�
 sgTag：字符串，目标.sg:HasStateTag() 必须返回 true。
 ]]
 
-
 --[[
 数据赋值器
 对生成的实体进行一些操作的表达式
@@ -789,21 +806,21 @@ local TYPES = {
                         ((not findEntitiesArg.cantTag) or #findEntitiesArg.cantTag == 0) and
                         ((not findEntitiesArg.canTag) or #findEntitiesArg.canTag == 0)) then
                     -- 找个锤子，全都满足
-                    return filter(shallowcopy(Ents), env, Ents[guid]), s
+                    return filter(shallowcopy(Ents), env, getCurrentPlayer(guid)), s
                 end
                 -- 妈的，起名起长了...
                 searchedEnts = TheSim:FindEntities(findEntitiesArg.x, findEntitiesArg.y, findEntitiesArg.z,
                         findEntitiesArg.range,
                         findEntitiesArg.mustTag, findEntitiesArg.cantTag, findEntitiesArg.canTag)
             end
-            return filter(searchedEnts, env, Ents[guid]), s
+            return filter(searchedEnts, env, getCurrentPlayer(guid)), s
         end
     end,
     nbt = function(str)
         local _, endIndex, found = str:find("^(%b{}) +")
         if (found) then
             local _, _, arg = found:find("^{(.*)}$")
-            assert(found, "正则写错了？")
+            assert(arg, "正则写错了？")
             local f = loadstring(arg)
             local env = genEnv()
             setfenv(f, env)
@@ -890,18 +907,14 @@ help: 打印文档
 
 damage：对实体造成伤害
 
-sink：对实体进行一次沉船杀
-kill：杀死实体，如果没有生命值组件则直接删除
+locate/find：搜索实体
 remove：删除实体，这会跳过死亡动画
 data：获取某个实体的信息（onsave）
 clear：清空实体物品栏
 
-
 item：修改实体的物品栏
 
-locate/find：搜索实体
-
-forceload：将某个实体视为像玩家一样能加载周围的物品
+forceload：将某个实体视为像玩家一样能加载周围的物品 -- 不会写
 
 ability：赋予玩家其他角色的能力
 gamemode：切换到创造模式（和上帝模式、隐形混合）或者旁观模式（不会溺水，扣血，被沉船，不会被墙挡住，没有碰撞）
@@ -910,16 +923,10 @@ give：给玩家物品
 
 playsound：播放音效
 
-alwaysday/alwaysdusk/alwaysnight：全天白天/黄昏/黑夜
-weather：下雨/天晴
+alwaysday/alwaysdusk/alwaysnight：全天白天/黄昏/黑夜 -- 不会写 有空看天体
+weather：下雨/天晴 -- 垃圾青蛙雨 根本没接口
 
 execute：以一些实体为 "it"，在 global 环境下依次执行 lua 指令
-
-save/s：c_save()的平替
-R：c_reset()的平替
-stop/shutdown: c_shutdown() 的平替
-
-time：跳过（LongUpdate）一定时间，数字可以加单位：s/h/d/y->秒/小时/天/年 （默认s）
 
 tag：管理某个实体的标签
 ]]
@@ -999,7 +1006,7 @@ Usage:
     time set (day|dusk|night)
     time set (spring|summer|autumn|winter)
 ]],
-        tp = [[kill
+        kill = [[kill
 
 Usage:
     kill
@@ -1008,10 +1015,105 @@ Usage:
 <target>
     被杀死的目标，可以是玩家名字（以下划线替换空格）、实体选择器、也可以留空表示自杀。
 ]],
+        sink = [[sink
+
+Usage:
+    sink
+    sink <target>
+
+<target>
+    被沉船杀的目标，可以是玩家名字（以下划线替换空格）、实体选择器、也可以留空表示沉掉自己。
+]],
+        damage = [[damage
+
+Usage:
+    damage <target> <number>
+    damage <target> <percent>%
+
+<target>
+    被伤害的目标，可以是玩家名字（以下划线替换空格）、实体选择器、也可以留空表示沉掉自己。
+]],
     }
 }
 
-local functions = {
+
+-- 指定实体的单参数命令
+local function _actForEnts(commandName, fn, argStr, guid, x, z, modenv, isDangerous)
+    local restArg
+    local targets
+    if (isEmptyArg(argStr)) then
+        local player = getCurrentPlayer(guid)
+        if (not player) then
+            print('using "' .. commandName .. '" without argument, but "current player" not found')
+            return {}
+        end
+        targets = { player }
+    end
+
+    if (not targets) then
+        local results, newStr = _testFormat(argStr, ARGS.string)
+        if (results) then
+            restArg = newStr
+            local player = _name2player(results[1])
+            if (not player) then
+                print("player \"" .. results[1] .. "\" not found")
+                return {}
+            end
+            targets = { player }
+        end
+    end
+
+    if (not targets) then
+        local results, newStr = _testFormat(argStr, ARGS.entities)
+        if (results) then
+            restArg = newStr
+            if (#results[1] == 0) then
+                print("no entity found")
+                return results[1]
+            end
+            targets = results[1]
+        end
+    end
+
+    local force = false
+    if (restArg:gsub(" ", ""):lower() == "fuck") then
+        restArg = ""
+        force = true
+    end
+    if (not isEmptyArg(restArg) or (not targets)) then
+        print("unknown args: ")
+        print(argStr)
+    end
+
+    if (isDangerous) then
+        -- 别手欠执行了 /kill @e
+        if (#targets > 100 and (not force)) then
+            TheNet:SystemMessage('too many ents to kill! if you really want execute it, append " fuck" for command to force it.')
+            return targets
+        end
+    end
+
+    for _, ent in pairs(targets) do
+        -- DestroyEntity
+        if ent and ent.IsValid and ent:IsValid() then
+            if (ent == TheWorld and isDangerous) then
+                if (force) then
+                    TheNet:SystemMessage("oh, look~ \"TheWorld\" included...")
+                    fn(ent)
+                else
+                    TheNet:SystemMessage("trying to modify \"TheWorld\" ent, skipped, use \" fuck\" to force it")
+                end
+            else
+                fn(ent)
+
+            end
+        end
+    end
+
+    return targets
+end
+local functions -- 分离变量方便重名调用
+functions = {
     tp = function(argStr, guid, x, z, modenv)
         local a = {}
         local arg = argStr
@@ -1041,7 +1143,7 @@ local functions = {
             a[1] = nil
         end
         if (not a[1]) then
-            local player = Ents[guid] or (#AllPlayers == 1 and AllPlayers[1] or nil)
+            local player = getCurrentPlayer(guid)
             if (not player) then
                 print("using tp without <source> argument, but \"current player\" not found")
                 return
@@ -1134,6 +1236,8 @@ local functions = {
             return
         end
 
+        local player = getCurrentPlayer(guid)
+
         while (true) do
             local result, newStr = nil, nil
             -- offset x,y,z 相对坐标
@@ -1144,10 +1248,8 @@ local functions = {
                     if (input_x and input_z) then
                         dx = input_x
                         dz = input_z
-                    elseif (Ents[guid]) then
-                        dx, dy, dz = Ents[guid].Transform:GetWorldPosition()
-                    elseif (#AllPlayers == 1) then
-                        dx, dy, dz = AllPlayers[1].Transform:GetWorldPosition()
+                    elseif (player) then
+                        dx, dy, dz = player.Transform:GetWorldPosition()
                     end
                 elseif (result[1] ~= "at") then
                     print("参数解析失败，不认识的字符串：", arg)
@@ -1240,6 +1342,35 @@ local functions = {
         TheNet:SystemMessage('当前世界种子："' .. TheWorld.meta.seed .. '"')
     end,
 
+
+    save = function(argStr, guid, input_x, input_z, modenv)
+        c_save()
+    end,
+    reset = function(argStr, guid, input_x, input_z, modenv)
+        if (isEmptyArg(argStr)) then
+            c_reset()
+        else
+            local num = tonumber(argStr)
+            if (num) then
+                c_rollback(num)
+            else
+                print("not a number: ", argStr)
+            end
+        end
+    end,
+    r = function(argStr, guid, input_x, input_z, modenv)
+        TheNet:SystemMessage("to avoid mistake, use uppercase 'R' to reset.")
+    end,
+    shutdown = function(argStr, guid, input_x, input_z, modenv)
+        if (argStr:gsub(" ", "") == "false") then
+            c_shutdown("false")
+        elseif (isEmptyArg(argStr)) then
+            c_shutdown()
+        else
+            print("unknown args: ", argStr)
+        end
+    end,
+
     time = function(argStr, guid, input_x, input_z, modenv)
 
         local results, newStr = _testFormat(argStr, ARGS.string)
@@ -1328,98 +1459,126 @@ local functions = {
 
     end,
 
-
     kill = function(argStr, guid, x, z, modenv)
-
-        local restArg
-        local targets
-        if(isEmptyArg(argStr))then
-            local player = Ents[guid] or (#AllPlayers == 1 and AllPlayers[1] or nil)
-            if (not player) then
-                print("using kill without argument, but \"current player\" not found")
-                return
-            end
-            targets = {player}--todo
-        end
-
-        if (not targets)then
-            local results, newStr = _testFormat(argStr, ARGS.string)
-            if (results) then
-                restArg = newStr
-                local player = _name2player(results[1])
-                if (not player) then
-                    print("player \"" .. results[1] .. "\" not found")
-                    return
+        _actForEnts("kill", function(ent)
+            local health = ent.components and ent.components.health
+            if health ~= nil then
+                if not health:IsDead() then
+                    health:Kill()
                 end
-                targets = { player }
+            else
+                ent:Remove()
             end
-        end
+        end, argStr, guid, x, z, modenv, true)
+    end,
+    remove = function(argStr, guid, x, z, modenv)
+        _actForEnts("remove", function(ent)
+            ent:Remove()
+        end, argStr, guid, x, z, modenv, true)
+    end,
+    damage = function(argStr, guid, x, z, modenv)
+        local startIndex, _, num, isPercent = argStr:find(" ([%+-%d%.]+)(%%?) ?$")
+        isPercent = (isPercent == "%")
+        num = tonumber(num)
 
-        if(not targets)then
-            local results, newStr = _testFormat(argStr, ARGS.entities)
-            if (results) then
-                restArg = newStr
-                if (#results[1] == 0) then
-                    print("no entity found")
-                    return
-                end
-                targets = results[1]
-            end
-        end
+        local s = argStr:split(1, startIndex)
 
-
-
-        local force = false
-        if (restArg:gsub(" ", ""):lower() == "fuck") then
-            restArg = ""
-            force = true
-        end
-        if (not isEmptyArg(restArg) or (not targets)) then
-            print("unknown args: ")
-            print(argStr)
-        end
-        -- 别手欠执行了 /kill @e
-        if (#targets > 100 and (not force)) then
-            TheNet:SystemMessage('too many ents to kill! if you really want execute it, append " fuck" for command to force it.')
-            return
-        end
-
-        for _, ent in pairs(targets) do
-            -- DestroyEntity
-            if ent and ent.IsValid and ent:IsValid() then
-                if(ent==TheWorld)then
-                    if(force)then
-                        TheNet:SystemMessage("oh, look~ \"TheWorld\" ent will be deleted now~")
-                        ent:Remove()
-                    else
-                        TheNet:SystemMessage("trying to delete \"TheWorld\" ent, skipped")
-                    end
-                else
-                    local health = ent.components and ent.components.health
-                    if health ~= nil then
-                        if not health:IsDead() then
-                            health:Kill()
+        _actForEnts("damage", function(ent)
+            local health = ent.components and ent.components.health
+            if health ~= nil then
+                if not health:IsDead() then
+                    if (num) then
+                        if (isPercent) then
+                            local percent = health:GetPercent()
+                            health:SetPercent(percent - (num / 100), nil, "damage command")
+                        else
+                            health:DoDelta(num, "damage command")
                         end
                     else
-                        ent:Remove()
+                        health:DoDelta(health.currenthealth or 0, nil, "damage command")
                     end
                 end
             end
+        end, s, guid, x, z, modenv, true)
+    end,
+
+    locate = function(argStr, guid, x, z, modenv, aliasname)
+        -- todo 这命令没啥用啊...
+        local ents = _actForEnts((aliasname or "locate"), fn.DUMMY, argStr, guid, x, z, modenv)
+
+        if (#ents == 0) then
+            TheNet:SystemMessage('no entity matched (arg: "' .. argStr .. '").')
+            return
         end
+        if (#ents == 1) then
+            local ent = ents[1]
+            TheNet:SystemMessage('only 1 entity matched (arg: "' .. argStr .. '").')
+            if (ent and ent.IsValid and ent:IsValid()) then
+                local X, Y, Z = ent.Transform:GetWorldPosition() -- 避开arg同名
+                local pos = (Y == 0) and (X .. ", " .. Z) or (X .. ", " .. Y .. ", " .. Z)
+                TheNet:SystemMessage('position: ' .. pos)
+            end
+            return
+        end
+        TheNet:SystemMessage('found' .. #ents .. ' entities. (arg: "' .. argStr .. '").')
+    end,
+
+    sink = function(argStr, guid, x, z, modenv)
+
+        local sinkSource = getCurrentPlayer(guid) or TheWorld
+
+        --WalkablePlatform:DestroyObjectsOnPlatform
+        if not TheWorld.ismastersim then
+            TheNet:SystemMessage("沉船杀只应该发生在主世界")
+            return
+        end
+        local shore_pt
+        _actForEnts("sink", function(ent)
+
+            -- WalkablePlatform:OnRemoveEntity
+            if ent.components.drownable ~= nil then
+                if shore_pt == nil then
+                    shore_pt = Vector3(FindRandomPointOnShoreFromOcean(sinkSource.Transform:GetWorldPosition()))
+                end
+                ent:PushEvent("onsink", { boat = self.inst, shore_pt = shore_pt })
+            else
+                ent:PushEvent("onsink", { boat = self.inst })
+            end
+
+            --WalkablePlatform:DestroyObjectsOnPlatform
+            if (ent and ent.IsValid and ent:IsValid() and (not ent:HasOneOfTags(IGNORE_WALKABLE_PLATFORM_TAGS_ON_REMOVE))) then
+                local v = ent
+                if v.entity:GetParent() == nil and v.components.amphibiouscreature == nil and v.components.drownable == nil then
+                    if v.components.inventoryitem ~= nil then
+                        v.components.inventoryitem:SetLanded(false, true)
+                    else
+                        DestroyEntity(v, self.inst, true, true)
+                    end
+                end
+            end
+        end, argStr, guid, x, z, modenv, true)
     end,
 
 }
 
+for aliasName, originalName in ipairs({ s = "save", R = "reset", stop = "shutdown", find = "locate" }) do
+    assert(functionAlias[originalName] and not functions[aliasName])
+    functions[aliasName] = function(argStr, guid, x, z, modenv)
+        return functions[originalName](argStr, guid, x, z, modenv, aliasName)
+    end
+end
+
+local MC_COMMAND_PREFIX = "/"
 return {
     priority = 0,
     test = function(fnstr, guid, x, z, modenv)
-        if (fnstr:sub(1, 1) == "/") then
+        if (startsWith(fnstr, MC_COMMAND_PREFIX)) then
             return true
         end
         return false
     end,
     apply = function(fnstr, guid, x, z, modenv)
-        local str = fnstr:sub(2)
+        local str = fnstr:sub(#MC_COMMAND_PREFIX+1)
         local tmp = split(str, " ", 2)
         local command = tmp[1]
         local args = tmp[2] and tmp[2] .. " " or " " -- 接个空格方便写正则
