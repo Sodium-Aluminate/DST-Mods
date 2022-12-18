@@ -1707,7 +1707,26 @@ functions = {
     end,
 
     help = function(argStr, guid, x, z, modenv)
+        if (isEmptyArg(argStr)) then
+            local lang = getLang()
+            local commands = ""
+            for k, _ in pairs(FUNCTION_MANUAL[lang] or {}) do
+                commands = commands..' "'..k..'"'
+            end
+            commands = commands:split(2)
+
+            local args = ""
+            for k, _ in pairs(ARG_MANUAL[lang] or {}) do
+                args = args..' "'..k..'"'
+            end
+            args = args:split(2)
+
+            TheNet:SystemMessage("available command manuals: "..commands..".\n available arg manuals: "..args..".\nuse /help <command or arg> for help.")
+            return
+        end
         local arg = argStr:gsub(" ", ""):lower()
+
+
 
         -- 缩 进 大 师 屎 山 代 码
         for _, lang in ipairs({ getLang(), getDefaultLang() }) do
