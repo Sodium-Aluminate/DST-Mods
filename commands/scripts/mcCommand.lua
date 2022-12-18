@@ -43,6 +43,13 @@ end
 local function getCurrentPlayer(guid)
     return guid and Ents[guid] or (#AllPlayers == 1 and AllPlayers[1] or nil)
 end
+local function getLang()
+    -- todo 判断服务器语言
+    return "zh"
+end
+local function getDefaultLang()
+    return "en"
+end
 
 -- todo 使用 metatable 替换掉当前策略
 -- todo 使用 metatable 将 prefab=flower 中未赋值的 flower 变成 "flower" 字符串
@@ -109,6 +116,9 @@ local fn = {
 }
 local XYZ = { "x", "y", "z" }
 
+---数字比较器格式："1" "1..2" "1.." "..2" ">1" ">=1" "<1" "<=1" "~=1" "!=1"
+---    如果数字比较器所比较的是某个简写的组件，那么可以通过加入百分号（随便加在哪里）来改为比较组件的值的百分比。
+
 ---@exampleUsage: numberCmp("1..2")
 ---@exampleReturn function cmp(num)
 ---     return num>1 and num<2
@@ -146,6 +156,7 @@ local NumberCmp = {
     }, {
         pattern = "^" .. "[<>=~!]=?" .. "[+-]?%d*%.?%d+" .. "$", -- 有点过度匹配但是我懒得精确匹配了
         cmp = function(str)
+            --todo 重写以防用户输入是错的
             str:gsub("!", "~")
             local ok, result = pcall(loadstring("return function(num) num" .. str .. " end"))
             return ok and result or fn.FALSE
@@ -165,9 +176,7 @@ end })
 
 ---nlp 中的 “是”，处理 “1.5 是 大于一的数”这样的判断
 ---处理选择器
----数字比较器格式："1" "1..2" "1.." "..2" ">1" ">=1" "<1" "<=1" "~=1" "!=1"
----    如果数字比较器所比较的是某个简写的组件，那么可以通过加入百分号（随便加在哪里）来改为比较组件的值的百分比。
----    注意：由于数字比较器的开销，传进来之前就得用 numberCmp 转换为函数比较器！！！
+---注意：由于数字比较器的开销，传进来之前就得用 numberCmp 转换为函数比较器！！！
 ---函数比较器： function(对应值) ... return <是否满足条件> end
 ---布尔比较器：为 true 表示对应值必须能被转换为 true；false 同理。
 ---
@@ -203,7 +212,7 @@ filterOverrides = {
     end,
 
     --- 实体生命值、理智、饱食度、耐久、新鲜度的值（或其百分比）是否满足范围
-    hp = function(arg)
+    health = function(arg)
         local numCmp, isPercent = NumberCmp(arg)
         return function(ent)
             if not (ent and ent.components and ent.components.health) then
@@ -286,12 +295,12 @@ filterOverrides = {
         end
     end
 }
-for alias, raw in pairs({ san = "sanity", use = "finiteuses", rot = "perishable" }) do
+for alias, raw in pairs({ hp = "health", san = "sanity", use = "finiteuses", rot = "perishable" }) do
     filterOverrides[alias] = filterOverrides[raw]
 end
-
-local NBTOverrides = {
-    hp = function(arg)
+local NBTOverrides
+NBTOverrides = {
+    health = function(arg)
         if (type(arg) == "number") then
             return function(ent)
                 if (ent and ent.components and ent.components.health) then
@@ -394,9 +403,9 @@ local NBTOverrides = {
         return fn.DUMMY
     end,
 }
-filterOverrides.san = filterOverrides.sanity
-filterOverrides.use = filterOverrides.finiteuses
-filterOverrides.rot = filterOverrides.perishable
+for alias, raw in pairs({ hp = "health", san = "sanity", use = "finiteuses", rot = "perishable" }) do
+    NBTOverrides[alias] = NBTOverrides[raw]
+end
 
 local function _readEntity(ent, stack)
     if (#stack == 0) then
@@ -621,70 +630,6 @@ local function applyNBT2Ents(ents, nbt, returnedFn)
     end
 end
 
---[[
-选择器
-example：
-    @e[c=20 x="..15" y=0 mustTag="edible_SEEDS" cantTag="meat" rot="绿"] 寻找自己20单位（5地皮）内，坐标x小于15，坐标y为0，有种子标签没有肉标签，新鲜度为绿（大于50%）的实体。
-
-    @e[prefab="flower"] 寻找所有的prefab为"flower"的实体（花）
-    @e[prefab="flow".."er"] 你可以在选择器里干很多事情，调用 TUNING 或者像mod开发者一样使用 GLOBAL 也是 ok 的
-    @e[type="flow.*"] 寻找所有prefab满足正则表达式："flow.*" 的实体
-
-    @e[c={x=10,z=10,range=20}]搜索范围改为 10,0,10 为球心，半径20单位的球。
-    @e[c=20] 类似的简写，不过是以你为中心。
-    @e[pos=function(x,y,z,player,GLOBAL) return x+y+z=114.514 end] 你可以自定义坐标检查函数，不过每个实体都要被调用一次，所以时间成本会比较高
-    @e[x="..10"] 寻找x坐标小于10的实体，由于这不是mc所以实际上不是很好用。
-
-    @e[hp="<10%"]寻找血量小于10%的实体
-
-    @e 所有实体
-    @s 命令的执行者
-    @p 距离最近的其他玩家
-    @r 随机玩家
-    @a 所有玩家
-
-选择器参数：一个 lua 可执行文件，类似于 modinfo 的样子。如果是注册的值则需要满足对应规则，如果是没注册的值，则直接寻找对应值进行比较：类型相同直接判断相等，类型不同则尝试数字比较器、函数比较器、布尔比较器来判断
-数字比较器格式："1" "1..2" "1.." "..2" ">1" ">=1" "<1" "<=1" "~=1" "!=1"
-    如果数字比较器所比较的是某个简写的组件，那么可以通过加入百分号（随便加在哪里）来改为比较组件的值的百分比。
-函数比较器： function(对应值) ... return <是否满足条件> end
-布尔比较器：为 true 表示对应值必须能被转换为 true；false 同理。
-
-注册的值：
-circle/c: table，为提高性能强烈建议填写！包含 x, y(default 0), z, range 四个参数。也可以是数字，表示以玩家为中心的范围搜索，距离单位是墙。
-pos: 打包的函数，参数为 (x,y,z,player,GLOBAL)。
-x/y/z: 直接与 目标.Transform:GetWorldPosition() 的值比较
-canTag：lua table，如果非空，目标必须包含表中至少一个Tag。也可以是字符串
-mustTag(或): lua table, 目标必须包含表中全部 tag。也可以是字符串
-cantTag: lua table, 目标必须不包含表中任意一个 tag。也可以是字符串
-
-hp/sanity/san/hunger/use/rot: 字符串，目标必须有对应组件且符合数字比较器（同上，下略）。也可以是数字
-
-type：字符串，正则表达式，目标prefab名字必须匹配表达式。如果不希望使用正则，请使用原生 prefab 变量。
-
-sgTag：字符串，目标.sg:HasStateTag() 必须返回 true。
-]]
-
---[[
-数据赋值器
-对生成的实体进行一些操作的表达式
-用花括号包裹的 lua 表达式。类似于选择器，如果是注册的值则根据对应规则来操作，否则直接对实体的对应值进行操作。
-最外层的花括号是语法标记，而内层的花括号将被 lua 处理。
-
-请确保内部代码的花括号（{}）数量一致，否则赋值器会无法找到代码的结尾。（也就是转义、注释、字符串中别出现花括号，如果非要用，自己数数量或者使用 \x7b \x7d）
-example：
-    {planted=true} （花）设置为人工种植的
-    {hp=100} 血量设置为 100
-    {y=10} 飞天
-    {return function(ent) if(math.random>0.5) then ent:Remove() end end} 灭霸（一半概率删掉实体）
-
-赋值器还可以额外返回一个函数，这个函数可以进一步对实体进行操作。
-
-注册的值：
-x/y/z: 设置实体的位置，使用 Transform:SetPosition() 设置
-
-hp/sanity/san/hunger/use/rot: 数字，表示将对应组件设置成该值。也可以是以"%"结尾的数字格式的字符串，视为设置对应比例。
-]]
-
 --------------------
 --- 命令格式判断 ---
 --------------------
@@ -767,6 +712,14 @@ local TYPES = {
                         env.mustTag = { env.mustTag }
                     end
                     table.insert(env.mustTag, "player")
+
+                    if (selector == "r") then
+                        env.sort = "random"
+                        env.limit = 1
+                    elseif (selector == "p") then
+                        env.sort = "nearest"
+                        env.limit = 1
+                    end
                 else
                     -- @e 所有实体
                     assert(selector == "e")
@@ -970,17 +923,147 @@ for _, p in ipairs({ _dayPhase, _seasonPhase }) do
     end
 end
 
-local FUNCTION_USAGE = {
+--todo 英文文档
+local ARG_MANUAL = {
     zh = {
+        nbt = [[nbt tags
+
+使用 lua 语法对实体进行操作。
+
+格式：{lua commands} (内部花括号必须成对匹配)
+在代码中声明的变量将被赋予对应实体，如果变量名满足特定条件，则将实体的对应组件进行相应操作。特殊条件已经在实例中全部举出。
+代码可以在最后返回一个函数，此函数也将被应用于目标实体。（函数输入参数为被操作的实体）。
+
+Example:
+    将花朵实体赋予“人工种植”标签
+    {planted=true}
+
+    将耐久设置为 10 次
+    {use=10}
+
+    将实体的生命值、理智值、饱食度、耐久度、新鲜度全部设置为一半
+    {hp="50%" san="50%" hunger="50%" use="50%" rot="50%"}
+
+    将x轴位置设置为 10
+    {x=10}
+
+    （对于每个实体）一半的概率移除实体：
+    {return function(ent) if(math.random()>0.5)then ent:Remove() end end}
+]],
+        filter = [[实体选择器
+
+使用 lua 语法选择世界上的实体。
+
+格式：@<type>[lua commands] (内部不能包含方括号)
+在代码中声明的变量将被用于检查实体是否满足要求，如果变量名满足特定条件，进行对应的特殊检查。
+使用 /help filter alias 来列出所有的特定条件（简写）。
+
+Example:
+    当前玩家
+    @s
+
+    距离最近的其他玩家
+    @p
+
+    随机玩家
+    @r
+
+    所有玩家
+    @a
+
+    所有实体
+    @e
+
+    玩家附近 20 格内的所有实体。使用 c 参数将显著提高搜索速度。
+    @e[c=20]
+
+    以 10,0,10 为中心 20 格内的所有实体
+    @e[c={x=10,z=10,range=20}]
+
+    所有带有种子食物标签但不带肉类食物标签的实体
+    @e[mustTag="edible_SEEDS" cantTag="meat"]
+
+    prefab 名为 flower 的实体
+    @e[prefab="flower"]
+
+    prefab 以 flow 开头的实体
+    @e[type="^flow.*"]
+
+    y 坐标大于 1 的实体（也可使用类似 Minecraft 的省略号）
+    @e[y=">1"]
+    @e[y="1.."]
+
+    x 和 z 坐标都在 -517 到 517 的实体
+    @e[x="-517..517" z="-517..517"]
+
+    所有血量小于10的实体（使用带有比较符号的字符串可以选择一定范围）
+    @e[hp="<10"]
+    @e[hp="..10"]
+
+    所有血量小于等于10%的实体（使用百分号改为检测组件的百分比）
+    @e[hp="<=10%"]
+
+    所有新鲜度为绿色的实体（只有新鲜度可以用红绿黄来简写）
+    @e[rot="绿"]
+]],
+        ["filter alias"] = [[
+circle/c
+    table 或 number
+    为提高性能强烈建议填写！
+    作为 table 时，包含 x, y(default 0), z, range 四个参数；
+    作为数字时，表示 range，并默认玩家坐标为 xyz。
+    距离单位是墙。
+pos
+    函数，参数为 (x,y,z,player,GLOBAL)，返回值为该实体是否满足条件。
+x/y/z
+    直接与坐标（inst.Transform:GetWorldPosition()）进行比较。
+canTag/mustTag/cantTag
+    table 或 string
+    作为 table，目标“必须包含一个”/“必须全部包含”/“必须不包含”表中的 Tag；
+    作为 string，视为包含该字符串的表；
+
+hp/sanity/san/hunger/use/rot:
+    number 或 function 或 string
+    作为 number，对应组件的值必须与该数字相等；
+    作为 function，目标组件的值作为参数传入后返回值必须是 true。
+    作为 string，对应组件的值或百分比必须符合对应不等式；
+    不等式的格式参见 /help numcmp
+
+type
+    string
+    正则表达式，目标prefab名字必须匹配表达式。如果不希望使用正则，请使用 prefab 替代 type。
+
+sgTag
+    string
+    对应实体的状态必须有这个标签 （inst.sg:HasStateTag() 必须返回 true）。
+]],
+        numcmp = [[数字比较器
+
+数字比较器是一个字符串，用于判断数字是否满足条件
+格式有如下两种：
+1. Minecraft 格式：
+    使用两个英文句号做分隔，目标数字必须大于左侧的数字且小于右侧的数字；
+    两个都可以留空表示无穷小/无穷大，但不能同时留空。
+2. 不等式格式
+    使用一个不等号接一个数字，当目标数字与此式拼接后组成的数学命题需成立。
+    如：">3"表示目标数字需要大于 3。
+    不等号包括 > >= < <= ~= !=，其中最后两种意义相同，均表示不等于。
+
+如果被比较对象是一个组件，则可以加入百分比符号（%）来比较其百分比。
+]]
+    }
+}
+
+local FUNCTION_MANUAL = {
+    zh = {
+
         tp = [[tp
 
 Usage:
-    tp
-    tp <target>
-    tp <source> <target>
+    tp [<source>] [<target>]
 
 <source>
-    被传送的目标，可以是玩家名字（以下划线替换空格）、实体选择器、也可以留空表示传送自己。
+    被传送的目标，可以是玩家名字（以下划线替换空格）、实体选择器、也可以留空表示传送自己。注意：不允许只选择 source 而不选择 target。
 
 <target>
     目标位置，可以是 x,z、x,y,z 或者玩家名字、返回一个实体的实体选择器、也可以留空表示传送到鼠标位置。
@@ -990,13 +1073,64 @@ Usage:
 Usage:
     summon <prefab> [<count>] (at|offset) [<pos>] [<nbt>]
     summon <prefab> <pos> [<nbt>]
+
+<prefab>
+    需要生成的实体名字
+
+<count>
+    需要生成的数量
+
+<pos>
+    生成的位置，使用 "at" 表示使用绝对坐标，使用 "offset" 表示使用以鼠标位置（或服务器内唯一玩家）为原点的相对坐标。
+
+<nbt>
+    需要对实体进行的操作，参见 /help nbt。
 ]],
         seed = [[seed
 
+显示世界种子
+
 Usage:
-    seed
+    seed [忽略一切参数]
 ]],
+
+        save = [[save
+
+存档。
+
+Usage:
+    save [忽略一切参数]
+    s [忽略一切参数]
+]],
+        reset = [[reset
+
+使用 c_reset() 或 c_rollback() 读档。
+
+Usage:
+    reset [<count>]
+    R [<count>]
+
+<count>
+    回档次数。
+    根据科雷注释：留空或为 0 时将返回最后一个存档；
+    若为 1 则返回除去 30 秒内的最近存档；
+    若为 其他值则相当于连续回档多次。
+]],
+        shutdown = [[shutdown
+
+关闭服务器。
+
+Usage:
+    shutdown [<should-save>]
+    stop [<should-save>]
+
+<should-save>
+    若为 false，则关闭服务器前不会存档，若为空，则正常存档。
+]],
+
         time = [[time
+
+显示或更改时间
 
 Usage:
     time
@@ -1006,32 +1140,50 @@ Usage:
     time set (day|dusk|night)
     time set (spring|summer|autumn|winter)
 ]],
+
         kill = [[kill
 
 Usage:
-    kill
-    kill <target>
+    kill [<target>]
 
 <target>
     被杀死的目标，可以是玩家名字（以下划线替换空格）、实体选择器、也可以留空表示自杀。
 ]],
-        sink = [[sink
+        remove = [[remove
 
 Usage:
-    sink
-    sink <target>
+    remove [<target>]
 
 <target>
-    被沉船杀的目标，可以是玩家名字（以下划线替换空格）、实体选择器、也可以留空表示沉掉自己。
+    被移除的目标，可以是玩家名字（以下划线替换空格）、实体选择器、也可以留空表示移除玩家实体。
+    注意，移除玩家可能会产生非预期的问题，特别是在一些有模组的服务器中。
 ]],
         damage = [[damage
 
 Usage:
-    damage <target> <number>
-    damage <target> <percent>%
+    damage [<target>] [<number>|<percent>%]
 
 <target>
-    被伤害的目标，可以是玩家名字（以下划线替换空格）、实体选择器、也可以留空表示沉掉自己。
+    被伤害的目标，可以是玩家名字（以下划线替换空格）、实体选择器、也可以留空表示对自己造成伤害。
+<number>
+    造成的伤害值，如果以百分号结束则视为百分比；留空则造成等同于实体血量的伤害
+]],
+        locate = [[locate
+
+Usage:
+    locate [<target>]
+    find [<target>]
+
+<target>
+    要寻找的目标，可以是玩家名字（以下划线替换空格）、实体选择器、也可以留空表示寻找自己。
+]],
+        sink = [[sink
+
+Usage:
+    sink [<target>]
+
+<target>
+    被沉船杀的目标，可以是玩家名字（以下划线替换空格）、实体选择器、也可以留空表示沉掉自己。
 ]],
     }
 }
@@ -1221,7 +1373,6 @@ functions = {
             end
         end
     end,
-
     summon = function(argStr, guid, input_x, input_z, modenv)
         local arg = argStr
         local prefab
@@ -1337,11 +1488,9 @@ functions = {
         end
 
     end,
-
     seed = function(argStr, guid, input_x, input_z, modenv)
         TheNet:SystemMessage('当前世界种子："' .. TheWorld.meta.seed .. '"')
     end,
-
 
     save = function(argStr, guid, input_x, input_z, modenv)
         c_save()
@@ -1499,9 +1648,8 @@ functions = {
                     end
                 end
             end
-        end, s, guid, x, z, modenv, true)
+        end, s, guid, x, z, modenv, false)
     end,
-
     locate = function(argStr, guid, x, z, modenv, aliasname)
         -- todo 这命令没啥用啊...
         local ents = _actForEnts((aliasname or "locate"), fn.DUMMY, argStr, guid, x, z, modenv)
@@ -1522,7 +1670,6 @@ functions = {
         end
         TheNet:SystemMessage('found' .. #ents .. ' entities. (arg: "' .. argStr .. '").')
     end,
-
     sink = function(argStr, guid, x, z, modenv)
 
         local sinkSource = getCurrentPlayer(guid) or TheWorld
@@ -1559,12 +1706,33 @@ functions = {
         end, argStr, guid, x, z, modenv, true)
     end,
 
+    help = function(argStr, guid, x, z, modenv)
+        local arg = argStr:gsub(" ", ""):lower()
+
+        -- 缩 进 大 师 屎 山 代 码
+        for _, lang in ipairs({ getLang(), getDefaultLang() }) do
+            for _, manual in ipairs({ FUNCTION_MANUAL, ARG_MANUAL }) do
+                if (manual[lang]) then
+                    for k, v in pairs(manual[lang]) do
+                        if (k:gsub(" ", ""):lower() == arg) then
+                            TheNet:SystemMessage(v)
+                            return
+                        end
+                    end
+                end
+            end
+        end
+    end
 }
 
 for aliasName, originalName in ipairs({ s = "save", R = "reset", stop = "shutdown", find = "locate" }) do
     assert(functionAlias[originalName] and not functions[aliasName])
     functions[aliasName] = function(argStr, guid, x, z, modenv)
         return functions[originalName](argStr, guid, x, z, modenv, aliasName)
+    end
+    for lang, manual in pairs(FUNCTION_MANUAL) do
+        assert(manual[originalName] and not manual[aliasName])
+        manual[aliasName] = manual[originalName]
     end
 end
 
@@ -1578,7 +1746,7 @@ return {
         return false
     end,
     apply = function(fnstr, guid, x, z, modenv)
-        local str = fnstr:sub(#MC_COMMAND_PREFIX+1)
+        local str = fnstr:sub(#MC_COMMAND_PREFIX + 1)
         local tmp = split(str, " ", 2)
         local command = tmp[1]
         local args = tmp[2] and tmp[2] .. " " or " " -- 接个空格方便写正则
