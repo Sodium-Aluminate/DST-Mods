@@ -6,12 +6,12 @@ for i in `ls --ignore={"example.lua","moduleList.lua","template.lua"} | grep '^.
 do
   echo "add module: " $i "to moduleList.lua"
   filename=$(echo $i|sed 's/\.lua$//')
-  printf "\t"'"'$filename'",'"\n" >> "$dir/moduleList.lua"
+  printf "\t"'"'$filename'",'"\n" >> "moduleList.lua"
 done
-printf "}" >> "$dir/moduleList.lua"
+printf "}" >> "moduleList.lua"
 
-if [[ -f "$dir/update.hook" ]]
+if [[ -f "update.hook" ]]
 then
   echo "execute update.hook ..."
-  "$dir/update.hook"
+  "./update.hook"
 fi
