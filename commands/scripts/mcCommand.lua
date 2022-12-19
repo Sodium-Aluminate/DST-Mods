@@ -1713,13 +1713,13 @@ functions = {
             for k, _ in pairs(FUNCTION_MANUAL[lang] or {}) do
                 commands = commands..' "'..k..'"'
             end
-            commands = commands:split(2)
+            commands = commands:sub(2)
 
             local args = ""
             for k, _ in pairs(ARG_MANUAL[lang] or {}) do
                 args = args..' "'..k..'"'
             end
-            args = args:split(2)
+            args = args:sub(2)
 
             TheNet:SystemMessage("available command manuals: "..commands..".\n available arg manuals: "..args..".\nuse /help <command or arg> for help.")
             return
