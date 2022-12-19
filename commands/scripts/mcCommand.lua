@@ -1366,7 +1366,7 @@ functions = {
         local p = a[2].result
         for i, ent in pairs(a[1].result) do
             if (ent.Transform) then
-                ent.Transform:SetPosition(p.x, p.y, p.z)
+                ent.Transform:SetPosition(p[1], p[2], p[3])
             else
                 print("found entity without Transform: ")
                 print(ent)
