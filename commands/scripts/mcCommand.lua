@@ -1743,7 +1743,7 @@ return {
     apply = function(fnstr, guid, x, z, modenv)
         local str = fnstr:sub(#MC_COMMAND_PREFIX + 1)
         local tmp = split(str, " ", 2)
-        local command = tmp[1]
+        local command = tmp[1] or "" -- 防止空指令
         local args = tmp[2] and tmp[2] .. " " or " " -- 接个空格方便写正则
 
         local commandFn = functions[command]
