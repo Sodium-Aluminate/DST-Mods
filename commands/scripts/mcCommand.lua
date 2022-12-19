@@ -40,6 +40,10 @@ end
 local function isEmptyArg(arg)
     return arg == nil or arg == "" or arg:find("^ +$")
 end
+local function isValidEnt(ent)
+    return ent and ent.IsValid and ent:IsValid()
+end
+
 local function getCurrentPlayer(guid)
     return guid and Ents[guid] or (#AllPlayers == 1 and AllPlayers[1] or nil)
 end
@@ -204,13 +208,6 @@ end
 ---         函数返回：该实体是否满足要求
 local filterOverrides
 filterOverrides = {
-    --- 实体prefab是否满足正则
-    type = function(regex)
-        return function(ent)
-            return ent.prefab and ent.prefab:find(regex)
-        end
-    end,
-
     --- 实体生命值、理智、饱食度、耐久、新鲜度的值（或其百分比）是否满足范围
     health = function(arg)
         local numCmp, isPercent = NumberCmp(arg)
@@ -447,8 +444,8 @@ end
 local function normalNBT(ents, nbt, stack)
     for k, v in pairs(nbt) do
         if (type(v) == "table") then
-            for i, ent in pairs() do
-                if (ent[k] == nil) then
+            for _, ent in pairs() do
+                if (isValidEnt(ent) and ent[k] == nil) then
                     ent[k] = {}
                 end
             end
@@ -456,8 +453,10 @@ local function normalNBT(ents, nbt, stack)
             table.insert(newStack, k)
             normalFiliter(ents, v, newStack)
         else
-            for i, ent in pairs() do
-                ent[k] = v
+            for _, ent in pairs(ents) do
+                if(isValidEnt(ent))then
+                    ent[k] = v
+                end
             end
         end
     end
@@ -480,10 +479,19 @@ local function filter(ents, filters, player)
                 ents[i] = nil
             end
         end
-
         -- 输入的过滤器删掉
         filters.prefab = nil
     end
+    -- type 是正则格式的 prefab，复制粘贴
+    if (filters.type) then
+        for i, v in pairs(ents) do
+            if (v.prefab and v.prefab:find(filters.type)) then
+                ents[i] = nil
+            end
+        end
+        filters.type = nil
+    end
+
     if (filters.x or filters.y or filters.z or filters.pos) then
         for _, k in ipairs(XYZ) do
             local t = NumberCmp(filters[k])
@@ -515,11 +523,11 @@ local function filter(ents, filters, player)
     for k, metaFn in pairs(filterOverrides) do
         if (filters[k]) then
             -- 生成过滤器
-            local f = metaFn(filters[k])
+            local newFilter = metaFn(filters[k])
 
             -- 用过滤器晒一遍实体
             for i, v in pairs(ents) do
-                if (not f(v)) then
+                if (not newFilter(v)) then
                     ents[i] = nil
                 end
             end
@@ -678,7 +686,12 @@ local TYPES = {
 
             local env = {}
             if (arg) then
-                local f = loadstring(arg)
+                local f, err = loadstring(arg)
+                if(not f)then
+                    TheNet:SystemMessage("命令执行解析失败，不符合 lua 语法: ")
+                    TheNet:SystemMessage(tostring(err))
+                    error(tostring(err))
+                end
                 env = genEnv()
                 setfenv(f, env)
                 local ok, r = pcall(f)
@@ -686,7 +699,7 @@ local TYPES = {
                     -- 函数执行失败 寄
                     TheNet:SystemMessage("实体选择器参数解析失败")
                     TheNet:SystemMessage(tostring(r))
-                    return
+                    error(tostring(r))
                 end
                 clearEnv(env)
             end
@@ -735,9 +748,9 @@ local TYPES = {
 
                 -- 处理 circle 参数
                 if (type(circle) == "number") then
-                    local player = Ents[guid]
+                    local player = getCurrentPlayer(guid)
                     if (not player) then
-                        print("error when parse " .. arg .. ": using player as search range, but player(guid=" .. guid .. ")not found.")
+                        print("error when parse " .. arg .. ": using player as search range, but player(guid=" .. tostring(guid) .. ")not found.")
                         print("using slow search.")
                     else
                         local x, y, z = player.Transform:GetWorldPosition()
@@ -792,37 +805,12 @@ local TYPES = {
     end
 }
 
-local function _fullTestFormat(str, format)
+local function _testFormat(str, format, guid)
     local currentStr, results = str, {}
     for _, v in ipairs(format) do
         if (type(v) == "string") then
             local result
-            result, currentStr = TYPES[v](currentStr)
-            if (result) then
-                table.insert(results, result)
-            else
-                return
-            end
-        elseif (type(v) == "function") then
-            local result
-            result, currentStr = v(currentStr)
-            if (result) then
-                table.insert(results, result)
-            else
-                return
-            end
-        end
-    end
-    if (currentStr == "") then
-        return results
-    end
-end
-local function _testFormat(str, format)
-    local currentStr, results = str, {}
-    for _, v in ipairs(format) do
-        if (type(v) == "string") then
-            local result
-            result, currentStr = TYPES[v](currentStr)
+            result, currentStr = TYPES[v](currentStr, guid)
             if (result) then
                 table.insert(results, result)
             else
@@ -839,19 +827,6 @@ local function _testFormat(str, format)
         end
     end
     return results, currentStr
-end
-
----argSplitter 拆分参数
----@param str string 参数
----@param formats table Array<FormatObject>
----FormatObject: table，type 的数组。 type 包括 "number" "numbers" "string" "entities" 和 function(string) return <matched str or nil>, <rest str> end
-local function argReader(str, formats)
-    for _, format in ipairs(formats) do
-        local result = _fullTestFormat(str, format)
-        if (result) then
-            return result, format
-        end
-    end
 end
 
 
@@ -1190,7 +1165,7 @@ Usage:
 
 
 -- 指定实体的单参数命令
-local function _actForEnts(commandName, fn, argStr, guid, x, z, modenv, isDangerous)
+local function _actForEnts(commandName, entFn, argStr, guid, x, z, modenv, isDangerous)
     local restArg
     local targets
     if (isEmptyArg(argStr)) then
@@ -1203,7 +1178,7 @@ local function _actForEnts(commandName, fn, argStr, guid, x, z, modenv, isDanger
     end
 
     if (not targets) then
-        local results, newStr = _testFormat(argStr, ARGS.string)
+        local results, newStr = _testFormat(argStr, ARGS.string, guid)
         if (results) then
             restArg = newStr
             local player = _name2player(results[1])
@@ -1216,7 +1191,7 @@ local function _actForEnts(commandName, fn, argStr, guid, x, z, modenv, isDanger
     end
 
     if (not targets) then
-        local results, newStr = _testFormat(argStr, ARGS.entities)
+        local results, newStr = _testFormat(argStr, ARGS.entities, guid)
         if (results) then
             restArg = newStr
             if (#results[1] == 0) then
@@ -1247,16 +1222,16 @@ local function _actForEnts(commandName, fn, argStr, guid, x, z, modenv, isDanger
 
     for _, ent in pairs(targets) do
         -- DestroyEntity
-        if ent and ent.IsValid and ent:IsValid() then
+        if isValidEnt(ent) then
             if (ent == TheWorld and isDangerous) then
                 if (force) then
                     TheNet:SystemMessage("oh, look~ \"TheWorld\" included...")
-                    fn(ent)
+                    entFn(ent)
                 else
                     TheNet:SystemMessage("trying to modify \"TheWorld\" ent, skipped, use \" fuck\" to force it")
                 end
             else
-                fn(ent)
+                entFn(ent)
 
             end
         end
@@ -1273,7 +1248,8 @@ functions = {
         while (true) do
             local l = #a
             for _, argFormat in ipairs(argFormats) do
-                local results, newStr = _testFormat(arg, argFormat)
+                print(argFormat[1])
+                local results, newStr = _testFormat(arg, argFormat, guid)
                 if (results) then
                     table.insert(a, { format = argFormat, result = results[1] })
                     arg = newStr
@@ -1378,7 +1354,7 @@ functions = {
         local prefab
         local x, y, z, count, nbtFn
 
-        local result, newStr = _testFormat(arg, ARGS.string)
+        local result, newStr = _testFormat(arg, ARGS.string, guid)
         if (result) then
             prefab = result[1]
             arg = newStr
@@ -1392,7 +1368,7 @@ functions = {
         while (true) do
             local result, newStr = nil, nil
             -- offset x,y,z 相对坐标
-            result, newStr = _testFormat(arg, ARGS.str_nums)
+            result, newStr = _testFormat(arg, ARGS.str_nums, guid)
             if (result) then
                 local dx, dy, dz = 0, 0, 0
                 if (result[1] == "offset") then
@@ -1426,7 +1402,7 @@ functions = {
 
             -- 绝对坐标
             result, newStr = nil, nil
-            result, newStr = _testFormat(arg, ARGS.numbers)
+            result, newStr = _testFormat(arg, ARGS.numbers, guid)
             if (result) then
                 local result = result[1]
                 if (#result > 3) then
@@ -1449,7 +1425,7 @@ functions = {
 
             -- 数量
             result, newStr = nil, nil
-            result, newStr = _testFormat(arg, ARGS.number)
+            result, newStr = _testFormat(arg, ARGS.number, guid)
             if (result) then
                 count = result[1]
 
@@ -1458,7 +1434,7 @@ functions = {
 
             -- nbt
             result, newStr = nil, nil
-            result, newStr = _testFormat(arg, ARGS.nbt)
+            result, newStr = _testFormat(arg, ARGS.nbt, guid)
             if (result) then
                 nbtFn = result[1]
                 arg = newStr
@@ -1522,7 +1498,7 @@ functions = {
 
     time = function(argStr, guid, input_x, input_z, modenv)
 
-        local results, newStr = _testFormat(argStr, ARGS.string)
+        local results, newStr = _testFormat(argStr, ARGS.string, guid)
         if (isEmptyArg(argStr) or results[1] == "query") then
             local day = TheWorld.state.cycles + math.floor(TheWorld.state.time * 100) / 100
             local seconds = math.floor(TheWorld.state.time * _timeLength.d * 100) / 100
@@ -1661,7 +1637,7 @@ functions = {
         if (#ents == 1) then
             local ent = ents[1]
             TheNet:SystemMessage('only 1 entity matched (arg: "' .. argStr .. '").')
-            if (ent and ent.IsValid and ent:IsValid()) then
+            if (isValidEnt(ent)) then
                 local X, Y, Z = ent.Transform:GetWorldPosition() -- 避开arg同名
                 local pos = (Y == 0) and (X .. ", " .. Z) or (X .. ", " .. Y .. ", " .. Z)
                 TheNet:SystemMessage('position: ' .. pos)
@@ -1693,7 +1669,7 @@ functions = {
             end
 
             --WalkablePlatform:DestroyObjectsOnPlatform
-            if (ent and ent.IsValid and ent:IsValid() and (not ent:HasOneOfTags(IGNORE_WALKABLE_PLATFORM_TAGS_ON_REMOVE))) then
+            if (isValidEnt(ent) and (not ent:HasOneOfTags(IGNORE_WALKABLE_PLATFORM_TAGS_ON_REMOVE))) then
                 local v = ent
                 if v.entity:GetParent() == nil and v.components.amphibiouscreature == nil and v.components.drownable == nil then
                     if v.components.inventoryitem ~= nil then
@@ -1711,17 +1687,17 @@ functions = {
             local lang = getLang()
             local commands = ""
             for k, _ in pairs(FUNCTION_MANUAL[lang] or {}) do
-                commands = commands..' "'..k..'"'
+                commands = commands .. ' "' .. k .. '"'
             end
             commands = commands:sub(2)
 
             local args = ""
             for k, _ in pairs(ARG_MANUAL[lang] or {}) do
-                args = args..' "'..k..'"'
+                args = args .. ' "' .. k .. '"'
             end
             args = args:sub(2)
 
-            TheNet:SystemMessage("available command manuals: "..commands..".\n available arg manuals: "..args..".\nuse /help <command or arg> for help.")
+            TheNet:SystemMessage("available command manuals: " .. commands .. ".\n available arg manuals: " .. args .. ".\nuse /help <command or arg> for help.")
             return
         end
         local arg = argStr:gsub(" ", ""):lower()

@@ -23,35 +23,42 @@ if (#modules > 1) then
     end)
 end
 
+local function pcallWithErrorMsg(fn, ...)
+    return GLOBAL.xpcall(fn, function(err)
+        GLOBAL.TheNet:SystemMessage("命令执行过程出现了一个错误，回滚到原版命令行解析器。\n故障栈已经打印到标准输出和/或服务器日志。")
+        GLOBAL.TheNet:SystemMessage("error: " .. tostring(err))
+
+        print(tostring(err) .. "\n" .. GLOBAL.debug.traceback())
+        return false, err
+    end, ...)
+end
+
 local rawExecuteConsoleCommandFn = GLOBAL.ExecuteConsoleCommand
 GLOBAL.ExecuteConsoleCommand = function(fnstr, guid, x, z)
     local disableOriginalExecutor = false
-    local currentModule = nil
-
+    local shouldContinue = true
 
     -- 暴力 try catch 一下
-    xpcall(function()
-        for _, module in ipairs(modules) do
-            currentModule = module
+    for _, module in ipairs(modules) do
+        local ok = pcallWithErrorMsg(function()
             if (module.test(fnstr, guid, x, z, env)) then
                 local result = module.apply(fnstr, guid, x, z, env)
                 result = (type(result) == "table") and result or {}
                 if (not result.shouldContinue) then
-                    return
+                    shouldContinue = false
                 elseif (result.disableOriginalExecutor) then
                     disableOriginalExecutor = true
                 end
             end
+        end)
+        if (not ok) then
+            GLOBAL.TheNet:SystemMessage("故障的模块为 " .. (module.name or "（未命名模块？）"))
         end
-    end, function()
-        --catch
-        print(debug.traceback())
-        GLOBAL.TheNet:SystemMessage("命令执行过程出现了一个错误，回滚到原版命令行解析器。\n故障栈已经打印到标准输出和/或服务器日志。")
-        disableOriginalExecutor = false
-        if (currentModule) then
-            GLOBAL.TheNet:SystemMessage("故障的模块为 " .. (currentModule.name or "（未命名模块？）"))
+        if (not shouldContinue) then
+            return
         end
-    end)
+    end
+
 
     if (not disableOriginalExecutor) then
         rawExecuteConsoleCommandFn(fnstr, guid, x, z)
