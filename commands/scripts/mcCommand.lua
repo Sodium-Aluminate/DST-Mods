@@ -1,3 +1,5 @@
+local log = require("log")
+
 local IGNORE_WALKABLE_PLATFORM_TAGS_ON_REMOVE = { "ignorewalkableplatforms", "ignorewalkableplatformdrowning", "activeprojectile", "flying", "FX", "DECOR", "INLIMBO", "player" }
 
 local function startsWith(scr, target)
@@ -11,7 +13,7 @@ local function _insertStr(t, str, allowEmpty)
     end
 end
 local function split(str, pattern, limit, allowEmpty)
-    if (limit < 2 and limit >= 0) then
+    if (limit and limit < 2 and limit >= 0) then
         return { str }
     end
     local l = {}
@@ -120,6 +122,39 @@ local fn = {
 }
 local XYZ = { "x", "y", "z" }
 
+local _numberCmpFn = {
+    [">"] = function(rv)
+        return function(lv)
+            -- rv for right value; lv for left value
+            return lv > rv
+        end
+    end,
+    [">="] = function(rv)
+        return function(lv)
+            return lv >= rv
+        end
+    end,
+    ["<"] = function(rv)
+        return function(lv)
+            return lv < rv
+        end
+    end,
+    ["<="] = function(rv)
+        return function(lv)
+            return lv <= rv
+        end
+    end,
+    ["=="] = function(rv)
+        return function(lv)
+            return lv == rv
+        end
+    end,
+    ["~="] = function(rv)
+        return function(lv)
+            return lv ~= rv
+        end
+    end,
+}
 ---数字比较器格式："1" "1..2" "1.." "..2" ">1" ">=1" "<1" "<=1" "~=1" "!=1"
 ---    如果数字比较器所比较的是某个简写的组件，那么可以通过加入百分号（随便加在哪里）来改为比较组件的值的百分比。
 
@@ -127,30 +162,30 @@ local XYZ = { "x", "y", "z" }
 ---@exampleReturn function cmp(num)
 ---     return num>1 and num<2
 ---end
-local NumberCmp = {
+local _numberCmp = {
     {
-        pattern = "^" .. "[+-]?%d*%.?%d+" .. "$",
+        pattern = "^" .. "[+-]?%d*%.?%d+" .. "$", -- 普通数字加什么字符串！
         cmp = function(str)
             return function(num)
                 return num == tonumber(str)
             end
         end
     }, {
-        pattern = "^" .. "[+-]?%d*%.?%d+" .. "%.%." .. "$",
+        pattern = "^" .. "[+-]?%d*%.?%d+" .. "%.%." .. "$", -- 10..
         cmp = function(str)
             return function(num)
                 return num >= tonumber(str:sub(1, #str - 2))
             end
         end
     }, {
-        pattern = "^" .. "%.%." .. "[+-]?%d*%.?%d+" .. "$",
+        pattern = "^" .. "%.%." .. "[+-]?%d*%.?%d+" .. "$", -- ..20
         cmp = function(str)
             return function(num)
                 return num <= tonumber(str:sub(3))
             end
         end
     }, {
-        pattern = "^" .. "[+-]?%d*%.?%d+" .. "%.%." .. "[+-]?%d*%.?%d+" .. "$",
+        pattern = "^" .. "[+-]?%d*%.?%d+" .. "%.%." .. "[+-]?%d*%.?%d+" .. "$", -- 10..20
         cmp = function(str)
             local s = split(str, "%.%.")
             return function(num)
@@ -158,25 +193,37 @@ local NumberCmp = {
             end
         end
     }, {
-        pattern = "^" .. "[<>=~!]=?" .. "[+-]?%d*%.?%d+" .. "$", -- 有点过度匹配但是我懒得精确匹配了
+        pattern = "^" .. "[<>=~!]=?" .. "[+-]?%d*%.?%d+" .. "$",
         cmp = function(str)
-            --todo 重写以防用户输入是错的
-            str:gsub("!", "~")
-            local ok, result = pcall(loadstring("return function(num) num" .. str .. " end"))
-            return ok and result or fn.FALSE
+            local s = str:gsub("!", "~")
+            local sign_start, sign_end = s:find("[<>=~]=?")
+            assert(sign_start == 1)
+            local sign = s:sub(1, sign_end)
+            if (sign_end == 1 and sign ~= ">" and sign ~= "<") then
+                sign = sign .. "=" --   = -> == ; ~ -> ~=
+            end
+
+            local num = tonumber(s:sub(sign_end + 1))
+
+            assert(_numberCmpFn[sign])
+            assert(num)
+
+            return _numberCmpFn[sign](num)
         end
     }
 }
-setmetatable(NumberCmp, { __call = function(str)
+local NumberCmp = function(str)
     if (type(str) == "string") then
         local isPercent = not not (str:find("%%"))
-        for _, v in ipairs(NumberCmp) do
-            if (str:find(v.pattern)) then
-                return v.cmp(str:gsub("%%", "")), isPercent
+        local s = str:gsub("%%", "")
+        for _, v in ipairs(_numberCmp) do
+            if (s:find(v.pattern)) then
+                return v.cmp(s), isPercent
             end
         end
+        log("nothing found!")
     end
-end })
+end
 
 ---nlp 中的 “是”，处理 “1.5 是 大于一的数”这样的判断
 ---处理选择器
@@ -200,7 +247,7 @@ local function a_is_b(a, b, a_component)
 end
 
 ---部分自定义过滤器（实体组件、实体prefab、sgTag）
----key：自定义名字，如 @e[type="flo.*"] 中 type 为自定义名字
+---key：自定义名字，如 @e[hp=5] 中 hp 为自定义名字
 ---value：一个生成函数的函数：
 ---     函数传参：原过滤器中对应的值：如上文的 "flo.*"
 ---     函数返回：另一个判断实体是否满足要求的函数：
@@ -454,7 +501,7 @@ local function normalNBT(ents, nbt, stack)
             normalFiliter(ents, v, newStack)
         else
             for _, ent in pairs(ents) do
-                if(isValidEnt(ent))then
+                if (isValidEnt(ent)) then
                     ent[k] = v
                 end
             end
@@ -482,15 +529,15 @@ local function filter(ents, filters, player)
         -- 输入的过滤器删掉
         filters.prefab = nil
     end
-    -- type 是正则格式的 prefab，复制粘贴
-    if (filters.type) then
-        for i, v in pairs(ents) do
-            if (v.prefab and v.prefab:find(filters.type)) then
-                ents[i] = nil
-            end
-        end
-        filters.type = nil
-    end
+    -- type 功能胎死腹中。原因：不管怎么设计都不舒服。
+    --if (filters.type) then
+    --    for i, v in pairs(ents) do
+    --        if (v.prefab and v.prefab:find(filters.type)) then
+    --            ents[i] = nil
+    --        end
+    --    end
+    --    filters.type = nil
+    --end
 
     if (filters.x or filters.y or filters.z or filters.pos) then
         for _, k in ipairs(XYZ) do
@@ -642,8 +689,8 @@ end
 --- 命令格式判断 ---
 --------------------
 local TYPES = {
-    number = function(str)
-        local _, endIndex, number = str:find("^(%d+) +")
+    number = function(str) -- todo 正则写错了！
+        local _, endIndex, number = str:find("[+-]?%d*%.?%d+")
         if (not number) then
             return
         end
@@ -653,7 +700,7 @@ local TYPES = {
         local nums = {}
         local s = str
         while (true) do
-            local _, endIndex, number = s:find("^(%d+) +")
+            local _, endIndex, number = s:find("[+-]?%d*%.?%d+")
             if (not number) then
                 if (#nums == 0) then
                     return
@@ -680,14 +727,14 @@ local TYPES = {
         local _, endIndex, selector = str:find("^@([espra])")
         local _, arg_endIndex, arg = str:find("^@[espra]%[([^%]]*)%] +")
         if (selector) then
-            print("实体解析器尝试解析：", selector, arg)
+            log("实体解析器尝试解析：", selector, arg)
             -- 提前处理好后事
             s = s:sub((arg_endIndex or endIndex) + 1)
 
             local env = {}
             if (arg) then
                 local f, err = loadstring(arg)
-                if(not f)then
+                if (not f) then
                     TheNet:SystemMessage("命令执行解析失败，不符合 lua 语法: ")
                     TheNet:SystemMessage(tostring(err))
                     error(tostring(err))
@@ -961,9 +1008,6 @@ Example:
     prefab 名为 flower 的实体
     @e[prefab="flower"]
 
-    prefab 以 flow 开头的实体
-    @e[type="^flow.*"]
-
     y 坐标大于 1 的实体（也可使用类似 Minecraft 的省略号）
     @e[y=">1"]
     @e[y="1.."]
@@ -1003,10 +1047,6 @@ hp/sanity/san/hunger/use/rot:
     作为 function，目标组件的值作为参数传入后返回值必须是 true。
     作为 string，对应组件的值或百分比必须符合对应不等式；
     不等式的格式参见 /help numcmp
-
-type
-    string
-    正则表达式，目标prefab名字必须匹配表达式。如果不希望使用正则，请使用 prefab 替代 type。
 
 sgTag
     string
@@ -1248,9 +1288,10 @@ functions = {
         while (true) do
             local l = #a
             for _, argFormat in ipairs(argFormats) do
-                print(argFormat[1])
+                log(argFormat[1])
                 local results, newStr = _testFormat(arg, argFormat, guid)
                 if (results) then
+                    log("found", argFormat[1], results[1])
                     table.insert(a, { format = argFormat, result = results[1] })
                     arg = newStr
                 end
@@ -1329,11 +1370,11 @@ functions = {
         -- format a: {{ent},{nums}}
 
         if (#a[2].result == 2) then
-            table.insert(a, 2, 0)
+            table.insert(a[2].result, 2, 0)
         end
 
         if (#a[2].result ~= 3) then
-            print('using tp but <target> have ' .. #a[2].result .. 'numbers."')
+            print('using tp but <target> have ' .. #a[2].result .. ' numbers."')
             return
         end
 
@@ -1432,6 +1473,8 @@ functions = {
                 arg = newStr
             end
 
+            count = (count and count > 0) and count or 1
+
             -- nbt
             result, newStr = nil, nil
             result, newStr = _testFormat(arg, ARGS.nbt, guid)
@@ -1446,6 +1489,15 @@ functions = {
 
         end
 
+
+        if((not x) or (not z)) then
+            if((not input_x) or (not input_z)) then
+                print("maybe you should choose a pos to summon in terminal mode?")
+            end
+            x = input_x or 0
+            z = input_z or 0
+        end
+
         local spawnedEnts = {}
         TheSim:LoadPrefabs({ prefab })
         if Prefabs[prefab] ~= nil and not Prefabs[prefab].is_skin and Prefabs[prefab].fn then
@@ -1454,7 +1506,7 @@ functions = {
                 if inst ~= nil then
                     table.insert(spawnedEnts, inst)
                     if (inst.Transform) then
-                        inst.Transform:SetPosition(x, y, z)
+                        inst.Transform:SetPosition(x, (y or 0), z)
                     end
                 end
             end
@@ -1663,9 +1715,9 @@ functions = {
                 if shore_pt == nil then
                     shore_pt = Vector3(FindRandomPointOnShoreFromOcean(sinkSource.Transform:GetWorldPosition()))
                 end
-                ent:PushEvent("onsink", { boat = self.inst, shore_pt = shore_pt })
+                ent:PushEvent("onsink", { boat = nil, shore_pt = shore_pt })
             else
-                ent:PushEvent("onsink", { boat = self.inst })
+                ent:PushEvent("onsink", { boat = nil })
             end
 
             --WalkablePlatform:DestroyObjectsOnPlatform
@@ -1675,7 +1727,7 @@ functions = {
                     if v.components.inventoryitem ~= nil then
                         v.components.inventoryitem:SetLanded(false, true)
                     else
-                        DestroyEntity(v, self.inst, true, true)
+                        DestroyEntity(v, TheWorld, true, true) -- 不能传 nil，因为工作组件发事件不检查nil，传空直接炸。
                     end
                 end
             end
@@ -1720,8 +1772,8 @@ functions = {
     end
 }
 
-for aliasName, originalName in ipairs({ s = "save", R = "reset", stop = "shutdown", find = "locate" }) do
-    assert(functionAlias[originalName] and not functions[aliasName])
+for aliasName, originalName in pairs({ s = "save", R = "reset", stop = "shutdown", find = "locate" }) do
+    assert(functions[originalName] and not functions[aliasName])
     functions[aliasName] = function(argStr, guid, x, z, modenv)
         return functions[originalName](argStr, guid, x, z, modenv, aliasName)
     end
