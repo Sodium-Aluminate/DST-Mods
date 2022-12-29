@@ -28,7 +28,9 @@ local function pcallWithErrorMsg(fn, ...)
         GLOBAL.TheNet:SystemMessage("命令执行过程出现了一个错误，回滚到原版命令行解析器。\n故障栈已经打印到标准输出和/或服务器日志。")
         GLOBAL.TheNet:SystemMessage("error: " .. tostring(err))
 
-        print(tostring(err) .. "\n" .. GLOBAL.debug.traceback())
+        --  print(tostring(err) .. "\n" .. GLOBAL.debug.traceback()) traceback 为啥会强制结束游戏啊？没找到源码改这里的地方，c层完成的？
+        print(GLOBAL.StackTrace(err))
+
         return false, err
     end, ...)
 end
@@ -58,7 +60,6 @@ GLOBAL.ExecuteConsoleCommand = function(fnstr, guid, x, z)
             return
         end
     end
-
 
     if (not disableOriginalExecutor) then
         rawExecuteConsoleCommandFn(fnstr, guid, x, z)
