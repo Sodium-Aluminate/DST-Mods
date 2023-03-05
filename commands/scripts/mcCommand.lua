@@ -1394,6 +1394,7 @@ functions = {
         local arg = argStr
         local prefab
         local x, y, z, count, nbtFn
+        nbtFn = fn.DUMMY
 
         local result, newStr = _testFormat(arg, ARGS.string, guid)
         if (result) then
