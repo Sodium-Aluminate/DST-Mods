@@ -9,4 +9,4 @@ out
 DST-Mods.iml
 DST_Bridge/MF/
 commands/scripts/update.hook
-Chinese_pp_fonts/install.sh
+/*/install.sh
